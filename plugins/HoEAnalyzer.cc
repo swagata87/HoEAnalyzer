@@ -19,7 +19,6 @@
 
 // system include files
 #include <memory>
-
 // user include files
 #include "RecoEgamma/EgammaIsolationAlgos/interface/EgammaHadTower.h"
 #include "CommonTools/UtilAlgos/interface/TFileService.h"
@@ -46,7 +45,6 @@
 #include "TTree.h"
 #include "RecoEgamma/EgammaElectronAlgos/interface/GsfElectronTools.h"
 #include "RecoEgamma/EgammaElectronAlgos/interface/GsfElectronAlgo.h"
-
 #include "FWCore/ServiceRegistry/interface/Service.h"
 #include <cmath>
 #include "TVector3.h"
@@ -70,7 +68,7 @@
 // This will improve performance in multithreaded jobs.
 
 
-using reco::TrackCollection;
+//using reco::TrackCollection;
 
 class HoEAnalyzer : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
 public:
@@ -81,6 +79,12 @@ public:
   edm::Service<TFileService> fs;
   TTree   *tree = fs->make<TTree>("EventTree", "EventData");
   
+  std::vector<float>  HadEnergy_depth1;
+  std::vector<float>  HadEnergy_depth2;
+  std::vector<float>  scEn;
+  std::vector<float>  ecalEn;
+  std::vector<float>  seedEn;
+  std::vector<float>  seedEnCorr;
   std::vector<float>  cmssw_eleHoE;
   std::vector<float>  cmssw_eleHoE_full5x5;
   std::vector<float>  my_eleHoE_default;
@@ -93,7 +97,6 @@ private:
   virtual void endJob() override;
   
   // ----------member data ---------------------------
-  //  edm::EDGetTokenT<TrackCollection> tracksToken_;  //used to select what tracks to read from configuration file
   edm::EDGetTokenT<edm::View<reco::GsfElectron> > eleToken_;
   //  edm::EDGetTokenT<CaloTowerCollection> caloTowersTag_;
   edm::EDGetTokenT<std::vector<PileupSummaryInfo> >     puCollection_;
@@ -114,7 +117,6 @@ private:
 //
 HoEAnalyzer::HoEAnalyzer(const edm::ParameterSet& iConfig)
  :
-  //  tracksToken_(consumes<TrackCollection>(iConfig.getUntrackedParameter<edm::InputTag>("tracks"))),
   eleToken_(consumes<edm::View<reco::GsfElectron> >(iConfig.getParameter<edm::InputTag>("electrons"))),
   //caloTowersTag_(consumes<CaloTowerCollection>(iConfig.getUntrackedParameter<edm::InputTag>("caloTowersTag"))),
   puCollection_(consumes<std::vector<PileupSummaryInfo> >(iConfig.getParameter<edm::InputTag>("pileupCollection"))),
@@ -123,6 +125,12 @@ HoEAnalyzer::HoEAnalyzer(const edm::ParameterSet& iConfig)
 {
    //now do what ever initialization is needed
 
+  tree->Branch("HadEnergy_depth1_",&HadEnergy_depth1);
+  tree->Branch("HadEnergy_depth2_",&HadEnergy_depth2);
+  tree->Branch("scEn_",&scEn);
+  tree->Branch("ecalEn_",&ecalEn);
+  tree->Branch("seedEn_",&seedEn);
+  tree->Branch("seedEnCorr_",&seedEnCorr);
   tree->Branch("cmssw_eleHoE_",&cmssw_eleHoE);
   tree->Branch("cmssw_eleHoE_full5x5_",&cmssw_eleHoE_full5x5);
   tree->Branch("my_eleHoE_default_",&my_eleHoE_default);
@@ -150,7 +158,13 @@ void
 HoEAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
   using namespace edm;
-  
+
+  HadEnergy_depth1.clear();
+  HadEnergy_depth2.clear();
+  scEn.clear();
+  ecalEn.clear();
+  seedEn.clear();
+  seedEnCorr.clear();
   cmssw_eleHoE.clear();
   cmssw_eleHoE_full5x5.clear();
   my_eleHoE_default.clear();
@@ -170,7 +184,7 @@ HoEAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
      eleScEta.push_back(ele.superCluster()->eta());
      
-     std::cout << "\n New Ele " << std::endl;
+     std::cout << "\n New Ele, eta= " << ele.superCluster()->eta() << std::endl;
      const reco::SuperCluster& superClus = *ele.superCluster();
      const reco::CaloCluster &seedCluster = *superClus.seed();
      
@@ -181,18 +195,28 @@ HoEAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
      iEvent.getByToken(hbhe_rechits_, hbheRechitsHandle);
      
      iSetup.get<CaloGeometryRecord>().get(theCaloGeometry);
-     // const CaloGeometry* caloGeometry;
-     //if (theCaloGeometry)  caloGeometry = theCaloGeometry.product();
+
+     //calculate default H/E using recHit (NOT caloTower) 
+     EgammaHcalIsolation *class_myHoE_recHit_default = new EgammaHcalIsolation( 0.15, 0, 0.7, 0.1, 0., 0., theCaloGeometry.product(), *hbheRechitsHandle);
      
-     //calculate default H/E using recHit (NOT caloTower) -- recHit is the desired way to do it
-     EgammaHcalIsolation *class_myHoE_recHit_default = new EgammaHcalIsolation( 0.15, 0, 0.7, 0.8, 0., 0., theCaloGeometry.product(), *hbheRechitsHandle);
+     float myHoE_recHit_default_d1 = (class_myHoE_recHit_default->getHcalESumDepth1(&superClus) ) / ( superClus.energy() );
+     float myHoE_recHit_default_d2 = (class_myHoE_recHit_default->getHcalESumDepth2(&superClus) ) / ( superClus.energy() );
+     float myHoE_recHit_default = myHoE_recHit_default_d1 + myHoE_recHit_default_d2  ;  
      
-     float myHoE_recHit_default_d1 = (class_myHoE_recHit_default->getHcalESumDepth1(&superClus) ) / (superClus.energy() );
-     float myHoE_recHit_default_d2 = (class_myHoE_recHit_default->getHcalESumDepth2(&superClus) ) / (superClus.energy() );
-     
-     float myHoE_recHit_default = myHoE_recHit_default_d1 + myHoE_recHit_default_d2  ;  //class_myHoE_recHit_default->getHcalESum(&superClus);
-     
-     // default definition, cone size 0.15 /// using caloTowers  /// obsolete?
+     std::cout << "cmsswHoE(full5x5) " << ele.full5x5_hcalOverEcal() << " cmsswHoE " << ele.hcalOverEcal()  << std::endl;   
+     std::cout << "my HoE: from recHits " << myHoE_recHit_default << std::endl;
+
+     HadEnergy_depth1.push_back(class_myHoE_recHit_default->getHcalESumDepth1(&superClus));   
+     HadEnergy_depth2.push_back(class_myHoE_recHit_default->getHcalESumDepth2(&superClus));   
+     scEn.push_back(superClus.energy());
+     seedEn.push_back(seedCluster.energy());
+     seedEnCorr.push_back(seedCluster.correctedEnergy());
+     ecalEn.push_back(ele.ecalEnergy());
+     cmssw_eleHoE.push_back(ele.hcalOverEcal());
+     cmssw_eleHoE_full5x5.push_back(ele.full5x5_hcalOverEcal());
+     my_eleHoE_default.push_back(myHoE_recHit_default);
+
+     ///// using caloTowers  /// obsolete
      /*
        EgammaTowerIsolation had1(0.15,0,0,1,caloTowerHandle.product() );
        EgammaTowerIsolation had2(0.15,0,0,2,caloTowerHandle.product() );
@@ -200,19 +224,8 @@ HoEAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
        float hcalDepth2OverEcal =had2.getTowerESum(&superClus)/superClus.energy();
        float myHoE_default =  hcalDepth1OverEcal+hcalDepth2OverEcal ;
      */
-     std::cout << "cmsswHoE(full5x5) " << ele.full5x5_hcalOverEcal() << " cmsswHoE " << ele.hcalOverEcal()  << std::endl;   
-     std::cout << "my HoE: from recHits " << myHoE_recHit_default << std::endl;
      
-     cmssw_eleHoE.push_back(ele.hcalOverEcal());
-     cmssw_eleHoE_full5x5.push_back(ele.full5x5_hcalOverEcal());
-     my_eleHoE_default.push_back(myHoE_recHit_default);
    }
-   
-   //   for(const auto& track : iEvent.get(tracksToken_) ) {
-     // do something with track parameters, e.g, plot the charge.
-     // int charge = track.charge();
-   // }
-   
    
    tree->Fill();
    
