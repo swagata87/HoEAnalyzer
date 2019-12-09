@@ -105,10 +105,11 @@ public:
   std::vector<int>    hcalRechitIeta;
   std::vector<int>    hcalRechitIphi;
   std::vector<float>  hcalRechitEnergy;
-  std::vector<float>  hcalRechitAbsDIetaFromEleSeed;
-  std::vector<float>  hcalRechitAbsDIphiFromEleSeed;
+  std::vector<int>    hcalRechitAbsDIetaFromEleSeed;
+  std::vector<int>    hcalRechitAbsDIphiFromEleSeed;
   std::vector<int>    hcalRechitRawID;
   std::vector<float>  puTrue;
+
   
 private:
   virtual void beginJob() override;
@@ -199,7 +200,7 @@ void
 HoEAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
   
-  //  std::cout << "\n \n ****** new event ... " << std::endl; 
+  //  std::cout << " \n ****** new event ... " << std::endl; 
   using namespace edm;
   
   scEn.clear();
@@ -229,12 +230,14 @@ HoEAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   hcalRechitAbsDIphiFromEleSeed.clear();
   hcalRechitRawID.clear();
   puTrue.clear();
+
   
   edm::Handle<std::vector<PileupSummaryInfo> > genPileupHandle;
   iEvent.getByToken(puCollection_, genPileupHandle);
   
   if (genPileupHandle.isValid()) {
     for (std::vector<PileupSummaryInfo>::const_iterator pu = genPileupHandle->begin(); pu != genPileupHandle->end(); ++pu) {
+      // std::cout << "will fill pu branch " << std::endl;
       puTrue.push_back(pu->getTrueNumInteractions());
     }
   }
@@ -250,6 +253,7 @@ HoEAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     elePt.push_back(ele.pt());
     elePhi.push_back(ele.phi());
     eleSigmaIEtaIEtaFull5x5.push_back(ele.full5x5_sigmaIetaIeta());
+  
 
     reco::GsfElectron::PflowIsolationVariables pfIso = ele.pfIsolationVariables();
     elePFNeuIso.push_back(pfIso.sumNeutralHadronEt);
@@ -286,6 +290,7 @@ HoEAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	//neither barrel nor endcap
 	eleSeedIeta.push_back(9999);
 	eleSeedIphi.push_back(9999);
+	eleSeedRawID.push_back(9999);
 	
       }
       
@@ -309,6 +314,7 @@ HoEAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	  hcalRechitAbsDIphiFromEleSeed.push_back(dIPhiAbs);
 	  //	  std::cout << "HBHE rawid = " << hcalrh.id().rawId() << std::endl;
 	  hcalRechitRawID.push_back(hcalrh.id().rawId());
+	 
 	}
 	
       }
@@ -318,6 +324,7 @@ HoEAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       // std::cout << "seed is NOT in ecal !!!! " << std::endl;
       eleSeedIeta.push_back(8888);
       eleSeedIphi.push_back(8888);
+      eleSeedRawID.push_back(8888);
       
       seedHcalIeta.push_back(9999);
       seedHcalIphi.push_back(9999);
