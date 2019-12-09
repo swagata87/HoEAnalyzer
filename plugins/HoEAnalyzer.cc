@@ -99,6 +99,7 @@ public:
   std::vector<int>    eleSeedSubdet;
   std::vector<int>    eleSeedIeta;
   std::vector<int>    eleSeedIphi;
+  std::vector<int>    eleSeedRawID;
   std::vector<int>    seedHcalIeta;
   std::vector<int>    seedHcalIphi;
   std::vector<int>    hcalRechitIeta;
@@ -106,6 +107,7 @@ public:
   std::vector<float>  hcalRechitEnergy;
   std::vector<float>  hcalRechitAbsDIetaFromEleSeed;
   std::vector<float>  hcalRechitAbsDIphiFromEleSeed;
+  std::vector<int>    hcalRechitRawID;
   std::vector<float>  puTrue;
   
 private:
@@ -165,6 +167,7 @@ HoEAnalyzer::HoEAnalyzer(const edm::ParameterSet& iConfig)
   tree->Branch("eleSeedSubdet_",&eleSeedSubdet);
   tree->Branch("eleSeedIeta_",&eleSeedIeta);
   tree->Branch("eleSeedIphi_",&eleSeedIphi);
+  tree->Branch("eleSeedRawID_",&eleSeedRawID);
   tree->Branch("seedHcalIeta_",&seedHcalIeta);
   tree->Branch("seedHcalIphi_",&seedHcalIphi);
   tree->Branch("hcalRechitIeta_",&hcalRechitIeta);
@@ -172,6 +175,7 @@ HoEAnalyzer::HoEAnalyzer(const edm::ParameterSet& iConfig)
   tree->Branch("hcalRechitEnergy_",&hcalRechitEnergy);
   tree->Branch("hcalRechitAbsDIetaFromEleSeed_",&hcalRechitAbsDIetaFromEleSeed);
   tree->Branch("hcalRechitAbsDIphiFromEleSeed_",&hcalRechitAbsDIphiFromEleSeed);
+  tree->Branch("hcalRechitRawID_",&hcalRechitRawID);
   tree->Branch("puTrue_", &puTrue);
 
 }
@@ -215,6 +219,7 @@ HoEAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   eleSeedSubdet.clear();
   eleSeedIeta.clear();
   eleSeedIphi.clear();
+  eleSeedRawID.clear();
   seedHcalIeta.clear();
   seedHcalIphi.clear();
   hcalRechitIeta.clear();
@@ -222,6 +227,7 @@ HoEAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   hcalRechitEnergy.clear();
   hcalRechitAbsDIetaFromEleSeed.clear();
   hcalRechitAbsDIphiFromEleSeed.clear();
+  hcalRechitRawID.clear();
   puTrue.clear();
   
   edm::Handle<std::vector<PileupSummaryInfo> > genPileupHandle;
@@ -262,13 +268,18 @@ HoEAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	EBDetId ebId(seedId);
 	eleSeedIeta.push_back(ebId.ieta());
 	eleSeedIphi.push_back(ebId.iphi());
+	//	std::cout << "EB rawid = " << ebId.rawId() << std::endl;
+	eleSeedRawID.push_back(ebId.rawId());
+
       }
       
       else if (seedId.subdetId() == EcalEndcap) {
 	EEDetId eeId(seedId);
 	eleSeedIeta.push_back(eeId.ix());
 	eleSeedIphi.push_back(eeId.iy());
-	
+	//	std::cout << "EE rawid = " << eeId.rawId() << std::endl;
+	eleSeedRawID.push_back(eeId.rawId());
+
       }
       
       else {
@@ -296,6 +307,8 @@ HoEAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	  hcalRechitEnergy.push_back(hcalrh.energy());
 	  hcalRechitAbsDIetaFromEleSeed.push_back(dIEtaAbs);
 	  hcalRechitAbsDIphiFromEleSeed.push_back(dIPhiAbs);
+	  //	  std::cout << "HBHE rawid = " << hcalrh.id().rawId() << std::endl;
+	  hcalRechitRawID.push_back(hcalrh.id().rawId());
 	}
 	
       }
