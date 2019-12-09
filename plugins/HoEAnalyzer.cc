@@ -57,6 +57,9 @@
 #include "DataFormats/HcalRecHit/interface/HcalRecHitCollections.h"
 #include "RecoEgamma/EgammaIsolationAlgos/interface/EgammaHcalIsolation.h"
 #include "RecoEgamma/EgammaElectronAlgos/interface/ElectronHcalHelper.h"
+#include "Geometry/CaloTopology/interface/CaloTowerConstituentsMap.h"
+#include "DataFormats/CaloTowers/interface/CaloTowerDetId.h"
+#include "RecoEgamma/EgammaIsolationAlgos/interface/EGHcalRecHitSelector.h"
 
 //
 // class declaration
@@ -68,40 +71,61 @@
 // This will improve performance in multithreaded jobs.
 
 
-//using reco::TrackCollection;
-
 class HoEAnalyzer : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
 public:
   explicit HoEAnalyzer(const edm::ParameterSet&);
   ~HoEAnalyzer();
   
+  static edm::ParameterSetDescription makePSetDescription();
+  
   static void fillDescriptions(edm::ConfigurationDescriptions& descriptions);
   edm::Service<TFileService> fs;
   TTree   *tree = fs->make<TTree>("EventTree", "EventData");
   
-  std::vector<float>  HadEnergy_depth1;
-  std::vector<float>  HadEnergy_depth2;
   std::vector<float>  scEn;
+  std::vector<float>  eleSCRawEn;
   std::vector<float>  ecalEn;
   std::vector<float>  seedEn;
   std::vector<float>  seedEnCorr;
   std::vector<float>  cmssw_eleHoE;
   std::vector<float>  cmssw_eleHoE_full5x5;
-  std::vector<float>  my_eleHoE_default;
   std::vector<float>  eleScEta;
+  std::vector<float>  elePt;
+  std::vector<float>  elePhi;
+  std::vector<float>  eleSigmaIEtaIEtaFull5x5;
+  std::vector<float>  elePFNeuIso;
+  std::vector<float>  elePFChIso;
+  std::vector<int>    eleSeedDet;
+  std::vector<int>    eleSeedSubdet;
+  std::vector<int>    eleSeedIeta;
+  std::vector<int>    eleSeedIphi;
+  std::vector<int>    seedHcalIeta;
+  std::vector<int>    seedHcalIphi;
+  std::vector<int>    hcalRechitIeta;
+  std::vector<int>    hcalRechitIphi;
+  std::vector<float>  hcalRechitEnergy;
+  std::vector<float>  hcalRechitAbsDIetaFromEleSeed;
+  std::vector<float>  hcalRechitAbsDIphiFromEleSeed;
   std::vector<float>  puTrue;
   
 private:
   virtual void beginJob() override;
   virtual void analyze(const edm::Event&, const edm::EventSetup&) override;
   virtual void endJob() override;
+  static int calDIEta(int iEta1, int iEta2);
+  static int calDIPhi(int iPhi1, int iPhi2);
+  float getMinEnergyHCAL_(HcalDetId id) const;
   
+  int maxDIEta_=5;
+  int maxDIPhi_=5;
+
   // ----------member data ---------------------------
   edm::EDGetTokenT<edm::View<reco::GsfElectron> > eleToken_;
-  //  edm::EDGetTokenT<CaloTowerCollection> caloTowersTag_;
   edm::EDGetTokenT<std::vector<PileupSummaryInfo> >     puCollection_;
   edm::EDGetTokenT<HBHERecHitCollection> hbhe_rechits_;
   edm::ESHandle<CaloGeometry> theCaloGeometry;
+  edm::ESHandle<CaloTowerConstituentsMap> towerMap_;
+
 };
 
 //
@@ -116,25 +140,38 @@ private:
 // constructors and destructor
 //
 HoEAnalyzer::HoEAnalyzer(const edm::ParameterSet& iConfig)
- :
+  :
   eleToken_(consumes<edm::View<reco::GsfElectron> >(iConfig.getParameter<edm::InputTag>("electrons"))),
-  //caloTowersTag_(consumes<CaloTowerCollection>(iConfig.getUntrackedParameter<edm::InputTag>("caloTowersTag"))),
   puCollection_(consumes<std::vector<PileupSummaryInfo> >(iConfig.getParameter<edm::InputTag>("pileupCollection"))),
   hbhe_rechits_(consumes<HBHERecHitCollection>(iConfig.getParameter<edm::InputTag>("hbheInput")))
-
+  
 {
-   //now do what ever initialization is needed
-
-  tree->Branch("HadEnergy_depth1_",&HadEnergy_depth1);
-  tree->Branch("HadEnergy_depth2_",&HadEnergy_depth2);
+  //now do what ever initialization is needed
+  
   tree->Branch("scEn_",&scEn);
+  tree->Branch("eleSCRawEn_",&eleSCRawEn);
   tree->Branch("ecalEn_",&ecalEn);
   tree->Branch("seedEn_",&seedEn);
   tree->Branch("seedEnCorr_",&seedEnCorr);
   tree->Branch("cmssw_eleHoE_",&cmssw_eleHoE);
   tree->Branch("cmssw_eleHoE_full5x5_",&cmssw_eleHoE_full5x5);
-  tree->Branch("my_eleHoE_default_",&my_eleHoE_default);
   tree->Branch("eleScEta_",&eleScEta);
+  tree->Branch("elePt_",&elePt);
+  tree->Branch("elePhi_",&elePhi);
+  tree->Branch("eleSigmaIEtaIEtaFull5x5_",&eleSigmaIEtaIEtaFull5x5);
+  tree->Branch("elePFNeuIso_",&elePFNeuIso);
+  tree->Branch("elePFChIso_",&elePFChIso);
+  tree->Branch("eleSeedDet_",&eleSeedDet);
+  tree->Branch("eleSeedSubdet_",&eleSeedSubdet);
+  tree->Branch("eleSeedIeta_",&eleSeedIeta);
+  tree->Branch("eleSeedIphi_",&eleSeedIphi);
+  tree->Branch("seedHcalIeta_",&seedHcalIeta);
+  tree->Branch("seedHcalIphi_",&seedHcalIphi);
+  tree->Branch("hcalRechitIeta_",&hcalRechitIeta);
+  tree->Branch("hcalRechitIphi_",&hcalRechitIphi);
+  tree->Branch("hcalRechitEnergy_",&hcalRechitEnergy);
+  tree->Branch("hcalRechitAbsDIetaFromEleSeed_",&hcalRechitAbsDIetaFromEleSeed);
+  tree->Branch("hcalRechitAbsDIphiFromEleSeed_",&hcalRechitAbsDIphiFromEleSeed);
   tree->Branch("puTrue_", &puTrue);
 
 }
@@ -142,10 +179,10 @@ HoEAnalyzer::HoEAnalyzer(const edm::ParameterSet& iConfig)
 
 HoEAnalyzer::~HoEAnalyzer()
 {
-
-   // do anything here that needs to be done at desctruction time
-   // (e.g. close files, deallocate resources etc.)
-
+  
+  // do anything here that needs to be done at desctruction time
+  // (e.g. close files, deallocate resources etc.)
+  
 }
 
 
@@ -157,85 +194,181 @@ HoEAnalyzer::~HoEAnalyzer()
 void
 HoEAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
+  
+  //  std::cout << "\n \n ****** new event ... " << std::endl; 
   using namespace edm;
-
-  HadEnergy_depth1.clear();
-  HadEnergy_depth2.clear();
+  
   scEn.clear();
+  eleSCRawEn.clear();
   ecalEn.clear();
   seedEn.clear();
   seedEnCorr.clear();
   cmssw_eleHoE.clear();
   cmssw_eleHoE_full5x5.clear();
-  my_eleHoE_default.clear();
   eleScEta.clear();
+  elePt.clear();
+  elePhi.clear();
+  eleSigmaIEtaIEtaFull5x5.clear();
+  elePFNeuIso.clear();
+  elePFChIso.clear();
+  eleSeedDet.clear();
+  eleSeedSubdet.clear();
+  eleSeedIeta.clear();
+  eleSeedIphi.clear();
+  seedHcalIeta.clear();
+  seedHcalIphi.clear();
+  hcalRechitIeta.clear();
+  hcalRechitIphi.clear();
+  hcalRechitEnergy.clear();
+  hcalRechitAbsDIetaFromEleSeed.clear();
+  hcalRechitAbsDIphiFromEleSeed.clear();
   puTrue.clear();
-
-   edm::Handle<std::vector<PileupSummaryInfo> > genPileupHandle;
-   iEvent.getByToken(puCollection_, genPileupHandle);
   
-   if (genPileupHandle.isValid()) {
-     for (std::vector<PileupSummaryInfo>::const_iterator pu = genPileupHandle->begin(); pu != genPileupHandle->end(); ++pu) {
-       puTrue.push_back(pu->getTrueNumInteractions());
-     }
-   }
+  edm::Handle<std::vector<PileupSummaryInfo> > genPileupHandle;
+  iEvent.getByToken(puCollection_, genPileupHandle);
+  
+  if (genPileupHandle.isValid()) {
+    for (std::vector<PileupSummaryInfo>::const_iterator pu = genPileupHandle->begin(); pu != genPileupHandle->end(); ++pu) {
+      puTrue.push_back(pu->getTrueNumInteractions());
+    }
+  }
+  
+  edm::Handle<HBHERecHitCollection> hbheRechitsHandle;
+  iEvent.getByToken(hbhe_rechits_, hbheRechitsHandle);
+  iSetup.get<CaloGeometryRecord>().get(theCaloGeometry);
+  iSetup.get<CaloGeometryRecord>().get(towerMap_);
+  
+  for(const auto& ele : iEvent.get(eleToken_) ) {
+    
+    eleScEta.push_back(ele.superCluster()->eta());
+    elePt.push_back(ele.pt());
+    elePhi.push_back(ele.phi());
+    eleSigmaIEtaIEtaFull5x5.push_back(ele.full5x5_sigmaIetaIeta());
 
-   for(const auto& ele : iEvent.get(eleToken_) ) {
-
-     eleScEta.push_back(ele.superCluster()->eta());
-     
-     std::cout << "\n New Ele, eta= " << ele.superCluster()->eta() << std::endl;
-     const reco::SuperCluster& superClus = *ele.superCluster();
-     const reco::CaloCluster &seedCluster = *superClus.seed();
-     
-     //   edm::Handle<CaloTowerCollection> caloTowerHandle;
-     // iEvent.getByToken(caloTowersTag_,caloTowerHandle);
-     
-     edm::Handle<HBHERecHitCollection> hbheRechitsHandle;
-     iEvent.getByToken(hbhe_rechits_, hbheRechitsHandle);
-     
-     iSetup.get<CaloGeometryRecord>().get(theCaloGeometry);
-
-     //calculate default H/E using recHit (NOT caloTower) 
-     EgammaHcalIsolation *class_myHoE_recHit_default = new EgammaHcalIsolation( 0.15, 0, 0.7, 0.1, 0., 0., theCaloGeometry.product(), *hbheRechitsHandle);
-     
-     float myHoE_recHit_default_d1 = (class_myHoE_recHit_default->getHcalESumDepth1(&superClus) ) / ( superClus.energy() );
-     float myHoE_recHit_default_d2 = (class_myHoE_recHit_default->getHcalESumDepth2(&superClus) ) / ( superClus.energy() );
-     float myHoE_recHit_default = myHoE_recHit_default_d1 + myHoE_recHit_default_d2  ;  
-     
-     std::cout << "cmsswHoE(full5x5) " << ele.full5x5_hcalOverEcal() << " cmsswHoE " << ele.hcalOverEcal()  << std::endl;   
-     std::cout << "my HoE: from recHits " << myHoE_recHit_default << std::endl;
-
-     HadEnergy_depth1.push_back(class_myHoE_recHit_default->getHcalESumDepth1(&superClus));   
-     HadEnergy_depth2.push_back(class_myHoE_recHit_default->getHcalESumDepth2(&superClus));   
-     scEn.push_back(superClus.energy());
-     seedEn.push_back(seedCluster.energy());
-     seedEnCorr.push_back(seedCluster.correctedEnergy());
-     ecalEn.push_back(ele.ecalEnergy());
-     cmssw_eleHoE.push_back(ele.hcalOverEcal());
-     cmssw_eleHoE_full5x5.push_back(ele.full5x5_hcalOverEcal());
-     my_eleHoE_default.push_back(myHoE_recHit_default);
-
-     ///// using caloTowers  /// obsolete
-     /*
-       EgammaTowerIsolation had1(0.15,0,0,1,caloTowerHandle.product() );
-       EgammaTowerIsolation had2(0.15,0,0,2,caloTowerHandle.product() );
-       float hcalDepth1OverEcal =had1.getTowerESum(&superClus)/superClus.energy();
-       float hcalDepth2OverEcal =had2.getTowerESum(&superClus)/superClus.energy();
-       float myHoE_default =  hcalDepth1OverEcal+hcalDepth2OverEcal ;
-     */
-     
-   }
+    reco::GsfElectron::PflowIsolationVariables pfIso = ele.pfIsolationVariables();
+    elePFNeuIso.push_back(pfIso.sumNeutralHadronEt);
+    elePFChIso.push_back(pfIso.sumChargedHadronPt);
+    
+    const reco::SuperCluster& superClus = *ele.superCluster();
+    const reco::CaloCluster &seedCluster = *superClus.seed();
+    DetId seedId = seedCluster.seed() ;
+    eleSeedDet.push_back(seedId.det());
+    eleSeedSubdet.push_back(seedId.subdetId());
+    
+    //     if( seedId.det() == DetId::Forward ) return; // i guess this is not needed for ntuplizing purpose
+    
+    if ( seedId.det() == DetId::Ecal ) {
+      if (seedId.subdetId() == EcalBarrel) {
+	EBDetId ebId(seedId);
+	eleSeedIeta.push_back(ebId.ieta());
+	eleSeedIphi.push_back(ebId.iphi());
+      }
+      
+      else if (seedId.subdetId() == EcalEndcap) {
+	EEDetId eeId(seedId);
+	eleSeedIeta.push_back(eeId.ix());
+	eleSeedIphi.push_back(eeId.iy());
+	
+      }
+      
+      else {
+	//neither barrel nor endcap
+	eleSeedIeta.push_back(9999);
+	eleSeedIphi.push_back(9999);
+	
+      }
+      
+      CaloTowerDetId towerId(towerMap_->towerOf(seedId)); 
+      int seedHcalIEta = towerId.ieta();
+      int seedHcalIPhi = towerId.iphi();
+      
+      seedHcalIeta.push_back(seedHcalIEta);
+      seedHcalIphi.push_back(seedHcalIPhi);
+      
+      for (auto& hcalrh : iEvent.get(hbhe_rechits_) ) {
+	int dIEtaAbs = std::abs(calDIEta(seedHcalIEta, hcalrh.id().ieta()));
+	int dIPhiAbs = std::abs(calDIPhi(seedHcalIPhi, hcalrh.id().iphi()));
+	
+	if ( (dIEtaAbs <= maxDIEta_) && (dIPhiAbs <= maxDIPhi_) &&  (hcalrh.energy()>getMinEnergyHCAL_(hcalrh.id()) ) ) {
+	  //std::cout << "close to ele, save " << std::endl;
+	  hcalRechitIeta.push_back(hcalrh.id().ieta());
+	  hcalRechitIphi.push_back(hcalrh.id().iphi());
+	  hcalRechitEnergy.push_back(hcalrh.energy());
+	  hcalRechitAbsDIetaFromEleSeed.push_back(dIEtaAbs);
+	  hcalRechitAbsDIphiFromEleSeed.push_back(dIPhiAbs);
+	}
+	
+      }
+      
+    }
+    else { 
+      // std::cout << "seed is NOT in ecal !!!! " << std::endl;
+      eleSeedIeta.push_back(8888);
+      eleSeedIphi.push_back(8888);
+      
+      seedHcalIeta.push_back(9999);
+      seedHcalIphi.push_back(9999);
+      
+    }
+    
+    //    std::cout << "cmsswHoE(full5x5) " << ele.full5x5_hcalOverEcal() << " cmsswHoE " << ele.hcalOverEcal()  << std::endl;   
+    
+    scEn.push_back(superClus.energy());
+    eleSCRawEn.push_back(superClus.rawEnergy());
+    seedEn.push_back(seedCluster.energy());
+    seedEnCorr.push_back(seedCluster.correctedEnergy());
+    ecalEn.push_back(ele.ecalEnergy());
+    cmssw_eleHoE.push_back(ele.hcalOverEcal());
+    cmssw_eleHoE_full5x5.push_back(ele.full5x5_hcalOverEcal());
+    
+  }
    
-   tree->Fill();
-   
-   
+  tree->Fill();
+  
+  
 #ifdef THIS_IS_AN_EVENTSETUP_EXAMPLE
-   ESHandle<SetupData> pSetup;
-   iSetup.get<SetupRecord>().get(pSetup);
+  ESHandle<SetupData> pSetup;
+  iSetup.get<SetupRecord>().get(pSetup);
 #endif
 }
 
+//doing some blatant copy paste from RecoEgamma/EgammaIsolationAlgos/src/EGHcalRecHitSelector.cc //
+
+int HoEAnalyzer::calDIPhi(int iPhi1, int iPhi2) {
+  int dPhi = iPhi1 - iPhi2;
+  if (dPhi > 72 / 2)
+    dPhi -= 72;
+  else if (dPhi < -72 / 2)
+    dPhi += 72;
+  return dPhi;
+}
+
+//
+
+int HoEAnalyzer::calDIEta(int iEta1, int iEta2) {
+  int dEta = iEta1 - iEta2;
+  if (iEta1 * iEta2 < 0) {  //-ve to +ve transistion and no crystal at zero
+    if (dEta < 0)
+      dEta++;
+    else
+      dEta--;
+  }
+  return dEta;
+}
+
+//
+
+float HoEAnalyzer::getMinEnergyHCAL_(HcalDetId id) const {
+  if (id.subdetId() == HcalBarrel)
+    return 0.8;
+  else if (id.subdetId() == HcalEndcap) {
+    if (id.depth() == 1)
+      return 0.1;
+    else
+      return 0.2;
+  } else
+    return 99999;
+}
 
 // ------------ method called once each job just before starting event loop  ------------
 void
@@ -258,11 +391,7 @@ HoEAnalyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   desc.setUnknown();
   descriptions.addDefault(desc);
 
-  //Specify that only 'tracks' is allowed
-  //To use, remove the default given above and uncomment below
-  //ParameterSetDescription desc;
-  //desc.addUntracked<edm::InputTag>("tracks","ctfWithMaterialTracks");
-  //descriptions.addDefault(desc);
+
 }
 
 //define this as a plug-in
