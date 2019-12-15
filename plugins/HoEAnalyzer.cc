@@ -108,6 +108,7 @@ public:
   std::vector<int>    hcalRechitAbsDIetaFromEleSeed;
   std::vector<int>    hcalRechitAbsDIphiFromEleSeed;
   std::vector<int>    hcalRechitRawID;
+  std::vector<int>    hcalRechitDepth;
   std::vector<float>  puTrue;
 
   
@@ -177,6 +178,7 @@ HoEAnalyzer::HoEAnalyzer(const edm::ParameterSet& iConfig)
   tree->Branch("hcalRechitAbsDIetaFromEleSeed_",&hcalRechitAbsDIetaFromEleSeed);
   tree->Branch("hcalRechitAbsDIphiFromEleSeed_",&hcalRechitAbsDIphiFromEleSeed);
   tree->Branch("hcalRechitRawID_",&hcalRechitRawID);
+  tree->Branch("hcalRechitDepth_",&hcalRechitDepth);
   tree->Branch("puTrue_", &puTrue);
 
 }
@@ -229,6 +231,7 @@ HoEAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   hcalRechitAbsDIetaFromEleSeed.clear();
   hcalRechitAbsDIphiFromEleSeed.clear();
   hcalRechitRawID.clear();
+  hcalRechitDepth.clear();
   puTrue.clear();
 
   
@@ -305,6 +308,8 @@ HoEAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	int dIEtaAbs = std::abs(calDIEta(seedHcalIEta, hcalrh.id().ieta()));
 	int dIPhiAbs = std::abs(calDIPhi(seedHcalIPhi, hcalrh.id().iphi()));
 	
+	//	std::cout << "depth of this rechit " << hcalrh.id().depth() << std::endl;
+
 	if ( (dIEtaAbs <= maxDIEta_) && (dIPhiAbs <= maxDIPhi_) &&  (hcalrh.energy()>getMinEnergyHCAL_(hcalrh.id()) ) ) {
 	  //std::cout << "close to ele, save " << std::endl;
 	  hcalRechitIeta.push_back(hcalrh.id().ieta());
@@ -314,7 +319,7 @@ HoEAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	  hcalRechitAbsDIphiFromEleSeed.push_back(dIPhiAbs);
 	  //	  std::cout << "HBHE rawid = " << hcalrh.id().rawId() << std::endl;
 	  hcalRechitRawID.push_back(hcalrh.id().rawId());
-	 
+	  hcalRechitDepth.push_back(hcalrh.id().depth());
 	}
 	
       }
