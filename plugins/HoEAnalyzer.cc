@@ -108,7 +108,9 @@ public:
   std::vector<int>    hcalRechitAbsDIetaFromEleSeed;
   std::vector<int>    hcalRechitAbsDIphiFromEleSeed;
   std::vector<int>    hcalRechitRawID;
-  std::vector<int>    hcalRechitDepth;
+  std::vector<int>    hcalRechitDepth; // mostly for Run 3 //
+  std::vector<int>    hcalRechitEta;
+  std::vector<int>    hcalRechitPhi;
   std::vector<float>  puTrue;
 
   
@@ -179,6 +181,8 @@ HoEAnalyzer::HoEAnalyzer(const edm::ParameterSet& iConfig)
   tree->Branch("hcalRechitAbsDIphiFromEleSeed_",&hcalRechitAbsDIphiFromEleSeed);
   tree->Branch("hcalRechitRawID_",&hcalRechitRawID);
   tree->Branch("hcalRechitDepth_",&hcalRechitDepth);
+  tree->Branch("hcalRechitEta_",&hcalRechitEta);
+  tree->Branch("hcalRechitPhi_",&hcalRechitPhi);
   tree->Branch("puTrue_", &puTrue);
 
 }
@@ -232,6 +236,8 @@ HoEAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   hcalRechitAbsDIphiFromEleSeed.clear();
   hcalRechitRawID.clear();
   hcalRechitDepth.clear();
+  hcalRechitEta.clear();
+  hcalRechitPhi.clear();
   puTrue.clear();
 
   
@@ -250,6 +256,9 @@ HoEAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   iSetup.get<CaloGeometryRecord>().get(theCaloGeometry);
   iSetup.get<CaloGeometryRecord>().get(towerMap_);
   
+  //   edm::ESHandle<CaloGeometry> theCaloGeom;
+
+
   for(const auto& ele : iEvent.get(eleToken_) ) {
     
     eleScEta.push_back(ele.superCluster()->eta());
@@ -277,7 +286,7 @@ HoEAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	eleSeedIphi.push_back(ebId.iphi());
 	//	std::cout << "EB rawid = " << ebId.rawId() << std::endl;
 	eleSeedRawID.push_back(ebId.rawId());
-
+       
       }
       
       else if (seedId.subdetId() == EcalEndcap) {
@@ -286,7 +295,6 @@ HoEAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	eleSeedIphi.push_back(eeId.iy());
 	//	std::cout << "EE rawid = " << eeId.rawId() << std::endl;
 	eleSeedRawID.push_back(eeId.rawId());
-
       }
       
       else {
@@ -303,6 +311,7 @@ HoEAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       
       seedHcalIeta.push_back(seedHcalIEta);
       seedHcalIphi.push_back(seedHcalIPhi);
+
       
       for (auto& hcalrh : iEvent.get(hbhe_rechits_) ) {
 	int dIEtaAbs = std::abs(calDIEta(seedHcalIEta, hcalrh.id().ieta()));
@@ -311,15 +320,42 @@ HoEAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	//	std::cout << "depth of this rechit " << hcalrh.id().depth() << std::endl;
 
 	if ( (dIEtaAbs <= maxDIEta_) && (dIPhiAbs <= maxDIPhi_) &&  (hcalrh.energy()>getMinEnergyHCAL_(hcalrh.id()) ) ) {
-	  //std::cout << "close to ele, save " << std::endl;
+	  // std::cout << "close to ele, save " << std::endl;
 	  hcalRechitIeta.push_back(hcalrh.id().ieta());
 	  hcalRechitIphi.push_back(hcalrh.id().iphi());
 	  hcalRechitEnergy.push_back(hcalrh.energy());
 	  hcalRechitAbsDIetaFromEleSeed.push_back(dIEtaAbs);
 	  hcalRechitAbsDIphiFromEleSeed.push_back(dIPhiAbs);
-	  //	  std::cout << "HBHE rawid = " << hcalrh.id().rawId() << std::endl;
+	  // std::cout << "HBHE rawid = " << hcalrh.id().rawId() << std::endl;
 	  hcalRechitRawID.push_back(hcalrh.id().rawId());
 	  hcalRechitDepth.push_back(hcalrh.id().depth());
+	  //	  if (theCaloGeometry)   std::cout << "theCaloGeometry.product() " << theCaloGeometry.product()  << std::endl; 
+	  // if (theCaloGeometry) {
+	  // if (theCaloGeometry.product() != nullptr) {
+	  float rechitEta=-99;
+	  float rechitPhi=-99;
+	  if ( (hcalrh.id().rawId() != 0 ) ) {
+	    if (theCaloGeometry.product() != nullptr) {
+	      const CaloSubdetectorGeometry *geo = theCaloGeometry->getSubdetectorGeometry(hcalrh.id());
+	      if(geo->getGeometry(hcalrh.id()) !=nullptr){
+		const GlobalPoint & rechitPoint = theCaloGeometry.product()->getPosition(hcalrh.id());
+		//     std::cout << "rechitPoint " << rechitPoint << std::endl;
+		rechitEta=rechitPoint.eta();
+		rechitPhi=rechitPoint.phi();
+		//		std::cout << "eta/phi " << rechitEta << " / " << rechitPhi << std::endl;
+		hcalRechitEta.push_back(rechitEta);
+		hcalRechitPhi.push_back(rechitPhi);
+	      }
+	    }
+	  }
+	  // if (theCaloGeometry.product()->getPosition(hcalrh.id())  ) {
+	  // std::cout << "position " << theCaloGeometry.product()->getPosition(hcalrh.id()) << std::endl;
+  	  //std::cout << "eta " << theCaloGeometry.product()->getPosition(hcalrh.id()).eta() << std::endl; 
+	  
+	  //	  hcalRechitEta.push_back(theCaloGeometry.product()->getPosition(hcalrh.id()).eta());
+	  //  hcalRechitPhi.push_back(theCaloGeometry.product()->getPosition(hcalrh.id()).phi());
+	  //}
+	  //  }
 	}
 	
       }
