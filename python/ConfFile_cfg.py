@@ -38,6 +38,9 @@ process.demo = cms.EDAnalyzer('HoEAnalyzer',
        electrons = cms.InputTag('slimmedElectrons'),
        pileupCollection     = cms.InputTag("slimmedAddPileupInfo"),
        hbheInput = cms.InputTag("reducedEgamma" ,  "reducedHBHEHits" ,  "PAT"),
+       ebReducedRecHitCollection = cms.InputTag("reducedEgamma", "reducedEBRecHits"),
+       eeReducedRecHitCollection = cms.InputTag("reducedEgamma", "reducedEERecHits"),
+       esReducedRecHitCollection = cms.InputTag("reducedEgamma", "reducedESRecHits"),
                               )
 process.TFileService = cms.Service("TFileService", fileName = cms.string('test_MINIAOD_2018.root'))
 
