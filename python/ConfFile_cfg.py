@@ -41,6 +41,8 @@ process.demo = cms.EDAnalyzer('HoEAnalyzer',
        ebReducedRecHitCollection = cms.InputTag("reducedEgamma", "reducedEBRecHits"),
        eeReducedRecHitCollection = cms.InputTag("reducedEgamma", "reducedEERecHits"),
        esReducedRecHitCollection = cms.InputTag("reducedEgamma", "reducedESRecHits"),
+       genParticleSrc       = cms.InputTag("prunedGenParticles"),
+#       genParticleSrc       = cms.InputTag("genParticles"),
        Run2_2018_ = cms.bool(True),
                               )
 process.TFileService = cms.Service("TFileService", fileName = cms.string('test_MINIAOD_2018.root'))

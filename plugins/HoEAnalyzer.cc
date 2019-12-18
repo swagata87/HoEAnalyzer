@@ -83,7 +83,10 @@ public:
   edm::Service<TFileService> fs;
   TTree   *tree = fs->make<TTree>("EventTree", "EventData");
   
+  std::vector<int>  ele_genmatched;
   std::vector<float>  scEn;
+  std::vector<float>  dR_recoEle_genEle;
+  std::vector<float>  ptRecoEle_by_ptGenEle;
   std::vector<float>  eleSCRawEn;
   std::vector<float>  ecalEn;
   std::vector<float>  seedEn;
@@ -149,6 +152,7 @@ private:
   edm::EDGetTokenT<EcalRecHitCollection> esReducedRecHitCollection_;
   edm::ESHandle<CaloGeometry> theCaloGeometry;  
   edm::ESHandle<CaloTowerConstituentsMap> towerMap_;
+  edm::EDGetTokenT<std::vector<reco::GenParticle> >     genParticlesCollection_;
 
   bool Run2_2018 ; // Now two options are supported, Run2_2018 and Run3
 };
@@ -172,11 +176,15 @@ HoEAnalyzer::HoEAnalyzer(const edm::ParameterSet& iConfig)
   ebReducedRecHitCollection_(consumes<EcalRecHitCollection>(iConfig.getParameter<edm::InputTag>("ebReducedRecHitCollection"))),
   eeReducedRecHitCollection_(consumes<EcalRecHitCollection>(iConfig.getParameter<edm::InputTag>("eeReducedRecHitCollection"))),
   esReducedRecHitCollection_(consumes<EcalRecHitCollection>(iConfig.getParameter<edm::InputTag>("esReducedRecHitCollection"))),
+  genParticlesCollection_(consumes<std::vector<reco::GenParticle> >(iConfig.getParameter<edm::InputTag>("genParticleSrc"))),
   Run2_2018(iConfig.getParameter<bool>("Run2_2018_"))
 
 {
   //now do what ever initialization is needed
   
+  tree->Branch("ele_genmatched_",&ele_genmatched);
+  tree->Branch("dR_recoEle_genEle_",&dR_recoEle_genEle);
+  tree->Branch("ptRecoEle_by_ptGenEle_",&ptRecoEle_by_ptGenEle);
   tree->Branch("scEn_",&scEn);
   tree->Branch("eleSCRawEn_",&eleSCRawEn);
   tree->Branch("ecalEn_",&ecalEn);
@@ -234,6 +242,9 @@ HoEAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   //  std::cout << " \n ****** new event ... " << std::endl; 
   using namespace edm;
   
+  ele_genmatched.clear();
+  ptRecoEle_by_ptGenEle.clear();
+  dR_recoEle_genEle.clear();
   scEn.clear();
   eleSCRawEn.clear();
   ecalEn.clear();
@@ -283,8 +294,39 @@ HoEAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   iEvent.getByToken(hbhe_rechits_, hbheRechitsHandle);
   iSetup.get<CaloGeometryRecord>().get(theCaloGeometry);
   iSetup.get<CaloGeometryRecord>().get(towerMap_);
+
+    
+  edm::Handle<std::vector<reco::GenParticle> > genParticlesHandle;
+  iEvent.getByToken(genParticlesCollection_, genParticlesHandle);
+  
   
   for(const auto& ele : iEvent.get(eleToken_) ) {
+    // std::cout << "\n new electron \n" ;
+    int genmatched=0;
+    double min_dr=9999.9;
+    double ptR=9999.9;
+     
+    if (genParticlesHandle.isValid()) {
+      for (std::vector<reco::GenParticle>::const_iterator ip = genParticlesHandle->begin(); ip != genParticlesHandle->end(); ++ip) {
+	const reco::Candidate *p = (const reco::Candidate*)&(*ip);
+	//std::cout << "p->status() " << p->status() << " p->pdgId() " << p->pdgId() << std::endl;
+	if ( (p->status()==1) && abs(p->pdgId() == 11) ) {
+	  double this_dr=reco::deltaR(ele,*p);
+	  if (this_dr<min_dr) {
+	    min_dr=this_dr;
+	    ptR=ele.pt()/p->pt();
+	  }
+	}  
+      }
+
+    }
+  
+    if ( (min_dr<0.04) && (ptR>0.7) && (ptR<1.3) )  genmatched=1; // these cuts were decided looking at min_dr and ptR distributions.
+    dR_recoEle_genEle.push_back(min_dr);
+    ptRecoEle_by_ptGenEle.push_back(ptR);
+    
+    ele_genmatched.push_back(genmatched);
+    
     
     perEle_hcalRechitIeta.clear();
     perEle_hcalRechitIphi.clear();
