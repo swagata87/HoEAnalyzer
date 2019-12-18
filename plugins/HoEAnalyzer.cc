@@ -150,6 +150,7 @@ private:
   edm::ESHandle<CaloGeometry> theCaloGeometry;  
   edm::ESHandle<CaloTowerConstituentsMap> towerMap_;
 
+  bool Run2_2018 ; // Now two options are supported, Run2_2018 and Run3
 };
 
 //
@@ -170,7 +171,9 @@ HoEAnalyzer::HoEAnalyzer(const edm::ParameterSet& iConfig)
   hbhe_rechits_(consumes<HBHERecHitCollection>(iConfig.getParameter<edm::InputTag>("hbheInput"))),
   ebReducedRecHitCollection_(consumes<EcalRecHitCollection>(iConfig.getParameter<edm::InputTag>("ebReducedRecHitCollection"))),
   eeReducedRecHitCollection_(consumes<EcalRecHitCollection>(iConfig.getParameter<edm::InputTag>("eeReducedRecHitCollection"))),
-  esReducedRecHitCollection_(consumes<EcalRecHitCollection>(iConfig.getParameter<edm::InputTag>("esReducedRecHitCollection")))
+  esReducedRecHitCollection_(consumes<EcalRecHitCollection>(iConfig.getParameter<edm::InputTag>("esReducedRecHitCollection"))),
+  Run2_2018(iConfig.getParameter<bool>("Run2_2018_"))
+
 {
   //now do what ever initialization is needed
   
@@ -474,19 +477,37 @@ int HoEAnalyzer::calDIEta(int iEta1, int iEta2) {
   return dEta;
 }
 
-//
+//HCAL thresholds from here https://cmssdt.cern.ch/lxr/source/RecoLocalCalo/CaloTowersCreator/python/calotowermaker_cfi.py?%21v=CMSSW_10_6_2
+//Note: As far as I understood, 
+//for 2018, HB threshold is 0.7, and for Run 3 it becomes 0.1 in depth1, 0.2 in depth2, 0.3 in other depths.
+//In HE, 2018 and Run3 is same, and it is 0.1 in depth1, and 0.2 in other depths.
+//Double check these HCAL thresholds from Sam.
 
 float HoEAnalyzer::getMinEnergyHCAL_(HcalDetId id) const {
-  if (id.subdetId() == HcalBarrel)
-    return 0.8;
+  if ( (id.subdetId() == HcalBarrel)  ) {
+    if ( (Run2_2018 == 1) )
+      return 0.7;
+    else if ( (Run2_2018 == 0) ) { //means Run3
+      if (id.depth() == 1)
+	return 0.1;
+      else if (id.depth() == 2)
+	return 0.2;
+      else
+	return 0.3;
+    }
+    else //neither 2018 , nor Run3, not supported
+      return 9999.0;
+  } 
+
   else if (id.subdetId() == HcalEndcap) {
     if (id.depth() == 1)
       return 0.1;
     else
       return 0.2;
   } else
-    return 99999;
+    return 9999.0;
 }
+
 
 // ------------ method called once each job just before starting event loop  ------------
 void
