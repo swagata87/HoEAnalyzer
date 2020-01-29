@@ -83,6 +83,15 @@ public:
   edm::Service<TFileService> fs;
   TTree   *tree = fs->make<TTree>("EventTree", "EventData");
   
+  std::vector<int>  ele_golden;
+  std::vector<int>  ele_unknown;
+  std::vector<int>  ele_bigbrem;
+  std::vector<int>  ele_badtrack;
+  std::vector<int>  ele_showering;
+  std::vector<int>  ele_gap;
+  std::vector<float> ele_trackFbrem;
+  std::vector<float> ele_superClusterFbrem;
+  std::vector<int> ele_numberOfBrems;
   std::vector<int>  ele_genmatched;
   std::vector<float>  scEn;
   std::vector<float>  dR_recoEle_genEle;
@@ -182,6 +191,15 @@ HoEAnalyzer::HoEAnalyzer(const edm::ParameterSet& iConfig)
 {
   //now do what ever initialization is needed
   
+  tree->Branch("ele_golden_",&ele_golden);
+  tree->Branch("ele_unknown_",&ele_unknown);
+  tree->Branch("ele_bigbrem_",&ele_bigbrem);
+  tree->Branch("ele_gap_",&ele_gap);
+  tree->Branch("ele_badtrack_",&ele_badtrack);
+  tree->Branch("ele_showering_",&ele_showering);
+  tree->Branch("ele_trackFbrem_",&ele_trackFbrem);
+  tree->Branch("ele_superClusterFbrem_",&ele_superClusterFbrem);
+  tree->Branch("ele_numberOfBrems_",&ele_numberOfBrems);
   tree->Branch("ele_genmatched_",&ele_genmatched);
   tree->Branch("dR_recoEle_genEle_",&dR_recoEle_genEle);
   tree->Branch("ptRecoEle_by_ptGenEle_",&ptRecoEle_by_ptGenEle);
@@ -239,9 +257,20 @@ void
 HoEAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
   
-  //  std::cout << " \n ****** new event ... " << std::endl; 
+  //   std::cout << " \n ****** new event ... " << std::endl; 
   using namespace edm;
   
+  ele_golden.clear();
+  ele_unknown.clear();
+  ele_badtrack.clear();
+  ele_bigbrem.clear();
+  ele_showering.clear();
+  ele_gap.clear();
+
+  ele_trackFbrem.clear();
+  ele_superClusterFbrem.clear();
+  ele_numberOfBrems.clear();
+
   ele_genmatched.clear();
   ptRecoEle_by_ptGenEle.clear();
   dR_recoEle_genEle.clear();
@@ -301,17 +330,23 @@ HoEAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   
   
   for(const auto& ele : iEvent.get(eleToken_) ) {
-    // std::cout << "\n new electron \n" ;
+    // std::cout << "\n new electron ...\n" ;
     int genmatched=0;
     double min_dr=9999.9;
     double ptR=9999.9;
      
     if (genParticlesHandle.isValid()) {
+      //std::cout << "starting gen particle loop \n " ;
       for (std::vector<reco::GenParticle>::const_iterator ip = genParticlesHandle->begin(); ip != genParticlesHandle->end(); ++ip) {
 	const reco::Candidate *p = (const reco::Candidate*)&(*ip);
-	//std::cout << "p->status() " << p->status() << " p->pdgId() " << p->pdgId() << std::endl;
-	if ( (p->status()==1) && abs(p->pdgId() == 11) ) {
+	//std::cout << " p->pdgId() " << p->pdgId() << std::endl;
+	if ( (abs(p->pdgId())) ==11 ) { 
+	  //std::cout << "-----  p->status() " << p->status() << " p->pdgId() " << p->pdgId() << std::endl;
+	}
+	if ( (p->status()==1) &&  ((abs(p->pdgId())) == 11)  ) {
+	  //std::cout << "checking if the reco ele match with this one" << std::endl;
 	  double this_dr=reco::deltaR(ele,*p);
+	  //std::cout << "this_dr " << this_dr << std::endl;
 	  if (this_dr<min_dr) {
 	    min_dr=this_dr;
 	    ptR=ele.pt()/p->pt();
@@ -324,7 +359,7 @@ HoEAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     if ( (min_dr<0.04) && (ptR>0.7) && (ptR<1.3) )  genmatched=1; // these cuts were decided looking at min_dr and ptR distributions.
     dR_recoEle_genEle.push_back(min_dr);
     ptRecoEle_by_ptGenEle.push_back(ptR);
-    
+    //  std::cout << "genmatched = " << genmatched <<  " min_dr " << min_dr << " ptR " << ptR   <<  std::endl;    
     ele_genmatched.push_back(genmatched);
     
     
@@ -455,8 +490,57 @@ HoEAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       }
       
     }
-
+  
+    ele_trackFbrem.push_back(ele.trackFbrem());
+    ele_superClusterFbrem.push_back(ele.superClusterFbrem());
+    ele_numberOfBrems.push_back(ele.numberOfBrems());
     
+    //    std::cout << "track_fbrem=" << ele.trackFbrem() << " sc_fbrem=" << ele.superClusterFbrem() << " nBrem="  <<  ele.numberOfBrems()  << std::endl;
+    // std::cout << "classification " << ele.classificationVariables().ClassificationVariables << std::endl;
+    int var_golden=0;
+    int var_unknown=0;
+    int var_gap=0;
+    int var_badtrack=0;
+    int var_showering=0;
+    int var_bigbrem=0;
+
+    if (ele.classification() == reco::GsfElectron::GOLDEN) {
+      // std::cout << "golden ele!!!" << std::endl;
+      var_golden=1;
+    }
+
+    if (ele.classification() == reco::GsfElectron::UNKNOWN) {
+      // std::cout << "UNKNOWN ele!!!" << std::endl;
+      var_unknown=1;
+    }
+
+    if (ele.classification() == reco::GsfElectron::BIGBREM) {
+      //std::cout << "BIGBREM ele!!!" << std::endl;
+      var_bigbrem=1;
+    }
+
+    if (ele.classification() == reco::GsfElectron::BADTRACK) {
+      //std::cout << "BADTRACK ele!!!" << std::endl;
+      var_badtrack=1;
+    }
+
+    if (ele.classification() == reco::GsfElectron::SHOWERING) {
+      // std::cout << "SHOWERING ele!!!" << std::endl;
+      var_showering=1;
+    }
+
+    if (ele.classification() == reco::GsfElectron::GAP) {
+      // std::cout << "GAP ele!!!" << std::endl;
+      var_gap=1;
+    }
+
+    ele_golden.push_back(var_golden);
+    ele_unknown.push_back(var_unknown);
+    ele_gap.push_back(var_gap);
+    ele_badtrack.push_back(var_badtrack);
+    ele_showering.push_back(var_showering);
+    ele_bigbrem.push_back(var_bigbrem);
+
     scEn.push_back(superClus.energy());
     eleSCRawEn.push_back(superClus.rawEnergy());
     seedEn.push_back(seedCluster.energy());
