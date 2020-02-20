@@ -24,6 +24,7 @@ public :
    Int_t           fCurrent; //!current Tree number in a TChain
 
 // Fixed size dimensions of array or collections stored in the TTree if any.
+   static constexpr Int_t kMaxele_golden =1;
    static constexpr Int_t kMaxele_genmatched = 1;
    static constexpr Int_t kMaxscEn = 1;
    static constexpr Int_t kMaxeleSCRawEn = 1;
@@ -33,7 +34,10 @@ public :
    static constexpr Int_t kMaxcmssw_eleHoE = 1;
    static constexpr Int_t kMaxcmssw_eleHoE_full5x5 = 1;
    static constexpr Int_t kMaxeleScEta = 1;
+   static constexpr Int_t kMaxeleScPhi = 1;
    static constexpr Int_t kMaxelePt = 1;
+   static constexpr Int_t kMaxele_full5x5_r9 = 1;
+   static constexpr Int_t kMaxeleGenPt = 1;
    static constexpr Int_t kMaxelePhi = 1;
    static constexpr Int_t kMaxeleSigmaIEtaIEtaFull5x5 = 1;
    static constexpr Int_t kMaxelePFNeuIso = 1;
@@ -57,8 +61,12 @@ public :
    static constexpr Int_t kMaxhcalRechitEta = 1;
    static constexpr Int_t kMaxhcalRechitPhi = 1;
    static constexpr Int_t kMaxpuTrue = 1;
+   static constexpr Int_t kMaxrun_number = 1;
+   static constexpr Int_t kMaxlumi_number = 1;
+   static constexpr Int_t kMaxevent_number = 1;
 
    // Declaration of leaf types
+   vector<int>   *ele_golden_;
    vector<int>   *ele_genmatched_;
    vector<float>   *scEn_;
    vector<float>   *eleSCRawEn_;
@@ -68,7 +76,10 @@ public :
    vector<float>   *cmssw_eleHoE_;
    vector<float>   *cmssw_eleHoE_full5x5_;
    vector<float>   *eleScEta_;
+   vector<float>   *eleScPhi_;
    vector<float>   *elePt_;
+   vector<float>   *ele_full5x5_r9_;
+   vector<float>   *eleGenPt_;
    vector<float>   *elePhi_;
    vector<float>   *eleSigmaIEtaIEtaFull5x5_;
    vector<float>   *elePFNeuIso_;
@@ -92,8 +103,12 @@ public :
    vector<vector<float> > *hcalRechitEta_;
    vector<vector<float> > *hcalRechitPhi_;
    vector<float>   *puTrue_;
+   vector<int>   *run_number_;
+   vector<int>   *lumi_number_;
+   vector<int>   *event_number_;
 
    // List of branches
+   TBranch        *b_ele_golden_;   //!
    TBranch        *b_ele_genmatched_;   //!
    TBranch        *b_scEn_;   //!
    TBranch        *b_eleSCRawEn_;   //!
@@ -103,7 +118,10 @@ public :
    TBranch        *b_cmssw_eleHoE_;   //!
    TBranch        *b_cmssw_eleHoE_full5x5_;   //!
    TBranch        *b_eleScEta_;   //!
+   TBranch        *b_eleScPhi_;   //!
    TBranch        *b_elePt_;   //!
+   TBranch        *b_ele_full5x5_r9_;   //!
+   TBranch        *b_eleGenPt_;   //!
    TBranch        *b_elePhi_;   //!
    TBranch        *b_eleSigmaIEtaIEtaFull5x5_;   //!
    TBranch        *b_elePFNeuIso_;   //!
@@ -127,6 +145,9 @@ public :
    TBranch        *b_hcalRechitEta_;   //!
    TBranch        *b_hcalRechitPhi_;   //!
    TBranch        *b_puTrue_;   //!
+   TBranch        *b_run_number_;   //!
+   TBranch        *b_lumi_number_;   //!
+   TBranch        *b_event_number_;   //!
 
    RedefHoverE(TTree *tree=0);
    virtual ~RedefHoverE();
@@ -148,11 +169,11 @@ RedefHoverE::RedefHoverE(TTree *tree) : fChain(0)
 // used to generate this class and read the Tree.
 //DYtoEE2023.root  SingleEle2018noPU.root
    if (tree == 0) {
-      TFile *f = (TFile*)gROOT->GetListOfFiles()->FindObject("/eos/cms/store/group/phys_egamma/swmukher/");
+      TFile *f = (TFile*)gROOT->GetListOfFiles()->FindObject("/eos/cms/store/group/phys_egamma/swmukher/HoE_Feb16_2020/EleGun2018.root");
       if (!f || !f->IsOpen()) {
-         f = new TFile("/eos/cms/store/group/phys_egamma/swmukher/");
+         f = new TFile("/eos/cms/store/group/phys_egamma/swmukher/HoE_Feb16_2020/EleGun2018.root");
       }
-      TDirectory * dir = (TDirectory*)f->Get("/eos/cms/store/group/phys_egamma/swmukher/:/demo");
+      TDirectory * dir = (TDirectory*)f->Get("/eos/cms/store/group/phys_egamma/swmukher/HoE_Feb16_2020/EleGun2018.root:/demo");
       dir->GetObject("EventTree",tree);
 
    }
@@ -195,6 +216,7 @@ void RedefHoverE::Init(TTree *tree)
    // (once per file to be processed).
 
    // Set object pointer
+   ele_golden_ = 0;
    ele_genmatched_ = 0;
    scEn_ = 0;
    eleSCRawEn_ = 0;
@@ -204,7 +226,10 @@ void RedefHoverE::Init(TTree *tree)
    cmssw_eleHoE_ = 0;
    cmssw_eleHoE_full5x5_ = 0;
    eleScEta_ = 0;
+   eleScPhi_ = 0;
    elePt_ = 0;
+   ele_full5x5_r9_ = 0;
+   eleGenPt_ = 0;
    elePhi_ = 0;
    eleSigmaIEtaIEtaFull5x5_ = 0;
    elePFNeuIso_ = 0;
@@ -228,12 +253,17 @@ void RedefHoverE::Init(TTree *tree)
    hcalRechitEta_ = 0;
    hcalRechitPhi_ = 0;
    puTrue_ = 0;
+   run_number_ = 0;
+   lumi_number_ = 0;
+   event_number_ = 0;
+   
    // Set branch addresses and branch pointers
    if (!tree) return;
    fChain = tree;
    fCurrent = -1;
    fChain->SetMakeClass(1);
 
+   fChain->SetBranchAddress("ele_golden_", &ele_golden_, &b_ele_golden_);
    fChain->SetBranchAddress("ele_genmatched_", &ele_genmatched_, &b_ele_genmatched_);
    fChain->SetBranchAddress("scEn_", &scEn_, &b_scEn_);
    fChain->SetBranchAddress("eleSCRawEn_", &eleSCRawEn_, &b_eleSCRawEn_);
@@ -243,7 +273,10 @@ void RedefHoverE::Init(TTree *tree)
    fChain->SetBranchAddress("cmssw_eleHoE_", &cmssw_eleHoE_, &b_cmssw_eleHoE_);
    fChain->SetBranchAddress("cmssw_eleHoE_full5x5_", &cmssw_eleHoE_full5x5_, &b_cmssw_eleHoE_full5x5_);
    fChain->SetBranchAddress("eleScEta_", &eleScEta_, &b_eleScEta_);
+   fChain->SetBranchAddress("eleScPhi_", &eleScPhi_, &b_eleScPhi_);
    fChain->SetBranchAddress("elePt_", &elePt_, &b_elePt_);
+   fChain->SetBranchAddress("ele_full5x5_r9_", &ele_full5x5_r9_, &b_ele_full5x5_r9_);
+   fChain->SetBranchAddress("eleGenPt_", &eleGenPt_, &b_eleGenPt_);
    fChain->SetBranchAddress("elePhi_", &elePhi_, &b_elePhi_);
    fChain->SetBranchAddress("eleSigmaIEtaIEtaFull5x5_", &eleSigmaIEtaIEtaFull5x5_, &b_eleSigmaIEtaIEtaFull5x5_);
    fChain->SetBranchAddress("elePFNeuIso_", &elePFNeuIso_, &b_elePFNeuIso_);
@@ -267,6 +300,14 @@ void RedefHoverE::Init(TTree *tree)
    fChain->SetBranchAddress("hcalRechitEta_", &hcalRechitEta_, &b_hcalRechitEta_);
    fChain->SetBranchAddress("hcalRechitPhi_", &hcalRechitPhi_, &b_hcalRechitPhi_);
    fChain->SetBranchAddress("puTrue_", &puTrue_, &b_puTrue_);
+   fChain->SetBranchAddress("run_number_", &run_number_, &b_run_number_);
+   fChain->SetBranchAddress("lumi_number_", &lumi_number_, &b_lumi_number_);
+   fChain->SetBranchAddress("event_number_", &event_number_, &b_event_number_);
+
+   //   fChain->SetBranchAddress("run_number_", &run_number_);
+   // fChain->SetBranchAddress("lumi_number_", &lumi_number_);
+   // fChain->SetBranchAddress("event_number_", &event_number_);
+
    Notify();
 }
 

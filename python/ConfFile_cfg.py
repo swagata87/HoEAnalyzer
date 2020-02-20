@@ -19,8 +19,8 @@ process.load("Geometry.HcalEventSetup.hcalTopologyIdeal_cfi")
 process.MessageLogger.cerr.FwkReport.reportEvery = 500
 
 from Configuration.AlCa.GlobalTag import GlobalTag
-#process.GlobalTag = GlobalTag(process.GlobalTag, '102X_upgrade2018_realistic_v15', '')     # 2018 MC
-process.GlobalTag = GlobalTag(process.GlobalTag, '106X_mcRun3_2023_realistic_v3', '')     # 2023 MC
+process.GlobalTag = GlobalTag(process.GlobalTag, '102X_upgrade2018_realistic_v15', '')     # 2018 MC
+#process.GlobalTag = GlobalTag(process.GlobalTag, '106X_mcRun3_2023_realistic_v3', '')     # 2023 MC
 
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 
@@ -35,6 +35,7 @@ process.source = cms.Source("PoolSource",
                             )
 
 process.demo = cms.EDAnalyzer('HoEAnalyzer',
+       rhoLabel  = cms.InputTag("fixedGridRhoFastjetAll"),
        electrons = cms.InputTag('slimmedElectrons'),
        pileupCollection     = cms.InputTag("slimmedAddPileupInfo"),
        hbheInput = cms.InputTag("reducedEgamma" ,  "reducedHBHEHits" ,  "PAT"),
@@ -43,7 +44,7 @@ process.demo = cms.EDAnalyzer('HoEAnalyzer',
        esReducedRecHitCollection = cms.InputTag("reducedEgamma", "reducedESRecHits"),
        genParticleSrc       = cms.InputTag("prunedGenParticles"),
 #       genParticleSrc       = cms.InputTag("genParticles"),
-       Run2_2018_ = cms.bool(False),
+       Run2_2018_ = cms.bool(True),
                               )
 process.TFileService = cms.Service("TFileService", fileName = cms.string('test_MINIAOD.root'))
 
