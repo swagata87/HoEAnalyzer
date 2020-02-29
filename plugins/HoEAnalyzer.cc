@@ -82,7 +82,18 @@ public:
   static void fillDescriptions(edm::ConfigurationDescriptions& descriptions);
   edm::Service<TFileService> fs;
   TTree   *tree = fs->make<TTree>("EventTree", "EventData");
-
+  //
+  //geometry & gap info
+  //
+  std::vector<int>  ele_isEB; // true if particle is in ECAL Barrel
+  std::vector<int>  ele_isEE; // true if particle is in ECAL Endcaps
+  std::vector<int>  ele_isEBEEGap; // true if particle is in the crack between EB and EE
+  std::vector<int>  ele_isEBEtaGap; // true if particle is in EB, and inside the eta gaps between modules
+  std::vector<int>  ele_isEBPhiGap; // true if particle is in EB, and inside the phi gaps between modules
+  std::vector<int>  ele_isEEDeeGap; // true if particle is in EE, and inside the gaps between dees
+  std::vector<int>  ele_isEERingGap; // true if particle is in EE, and inside the gaps between rings
+  std::vector<int>  ele_isGap; 
+  //
   std::vector<int>  ele_golden;
   std::vector<int>  ele_unknown;
   std::vector<int>  ele_bigbrem;
@@ -216,7 +227,17 @@ HoEAnalyzer::HoEAnalyzer(const edm::ParameterSet& iConfig)
 
 {
   //now do what ever initialization is needed
-  
+
+  // geometry, gaps etc info
+  tree->Branch("ele_isEB_",&ele_isEB);
+  tree->Branch("ele_isEE_",&ele_isEE);
+  tree->Branch("ele_isEBEEGap_",&ele_isEBEEGap);
+  tree->Branch("ele_isEBEtaGap_",&ele_isEBEtaGap);
+  tree->Branch("ele_isEBPhiGap_",&ele_isEBPhiGap);
+  tree->Branch("ele_isEEDeeGap_",&ele_isEEDeeGap);
+  tree->Branch("ele_isEERingGap_",&ele_isEERingGap);
+  tree->Branch("ele_isGap_",&ele_isGap);
+  //
   tree->Branch("ele_golden_",&ele_golden);
   tree->Branch("ele_unknown_",&ele_unknown);
   tree->Branch("ele_bigbrem_",&ele_bigbrem);
@@ -305,6 +326,15 @@ HoEAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   //  std::cout << " \n ****** new event ... " << std::endl; 
   using namespace edm;
   
+  ele_isEB.clear();
+  ele_isEE.clear();
+  ele_isEBEEGap.clear();
+  ele_isEBEtaGap.clear();
+  ele_isEBPhiGap.clear();
+  ele_isEEDeeGap.clear();
+  ele_isEERingGap.clear();
+  ele_isGap.clear();
+  //
   ele_golden.clear();
   ele_unknown.clear();
   ele_badtrack.clear();
@@ -400,11 +430,12 @@ HoEAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   
   
   for(const auto& ele : iEvent.get(eleToken_) ) {
-    // std::cout << "\n new electron ...\n" ;
+    ///   std::cout << "\n new electron ...\n" ;
     int genmatched=0;
     double min_dr=9999.9;
     double ptR=9999.9;
     double this_eleGenPt=-99;
+    double this_eleGenE=-99;
    
     if (genParticlesHandle.isValid()) {
       //std::cout << "starting gen particle loop \n " ;
@@ -424,6 +455,7 @@ HoEAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	    min_dr=this_dr;
 	    ptR=ele.pt()/p->pt();
 	    this_eleGenPt=p->pt();
+	    this_eleGenE=p->energy();
 	  }
 	}  
       }
@@ -456,6 +488,16 @@ HoEAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     elePhi.push_back(ele.phi());
     eleSigmaIEtaIEtaFull5x5.push_back(ele.full5x5_sigmaIetaIeta());
   
+    //gap, geometry etc
+    ele_isEB.push_back(ele.isEB()) ;
+    ele_isEE.push_back(ele.isEE()) ;
+    ele_isEBEEGap.push_back(ele.isEBEEGap()) ;
+    ele_isEBEtaGap.push_back(ele.isEBEtaGap()) ;
+    ele_isEBPhiGap.push_back(ele.isEBPhiGap()) ;
+    ele_isEEDeeGap.push_back(ele.isEEDeeGap());
+    ele_isEERingGap.push_back(ele.isEERingGap());
+    ele_isGap.push_back(ele.isGap());
+
     reco::GsfElectron::PflowIsolationVariables pfIso = ele.pfIsolationVariables();
     elePFNeuIso.push_back(pfIso.sumNeutralHadronEt);
     elePFChIso.push_back(pfIso.sumChargedHadronPt);
@@ -566,6 +608,23 @@ HoEAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 		
 		rechitEta=rechitPoint.eta();
 		rechitPhi=rechitPoint.phi();
+
+		float myDR2= reco::deltaR2(ele.superCluster()->eta(), ele.superCluster()->phi(), rechitEta, rechitPhi) ;
+		float myDR=sqrt(myDR2);
+
+		float myDR2seed= reco::deltaR2(var_eleSeedEta, var_eleSeedPhi, rechitEta, rechitPhi) ;
+		float myDRseed=sqrt(myDR2seed);
+
+		if ( (hcalrh.energy() > 6)  && ( myDR > 0.28 )  )  {
+		  std::cout << "\nele_SC_eta " << ele.superCluster()->eta() << " ele_SC_phi " << ele.superCluster()->phi() << std::endl;
+		  std::cout << "ele_seed_eta " << var_eleSeedEta << " ele_seed_phi " << var_eleSeedPhi  << std::endl;
+		  std::cout << "ele gen pt " << this_eleGenPt << " GeV, ele gen energy " << this_eleGenE << " GeV" <<std::endl;
+		  std::cout << "hcal rechit eta " << rechitEta << " hcal rechit phi " << rechitPhi << " hcal rechit energy " << hcalrh.energy() << " GeV" << std::endl;
+		  std::cout << "ele in gap? " << ele.isGap() << std::endl;
+		  std::cout << "dR(ele,hcal rechit) " << myDR << std::endl;
+		  std::cout << "dR(ele seed,hcal rechit) " << myDRseed << std::endl;
+		  std::cout << "run:lumi:event " << iEvent.id().run()<< ":" << iEvent.luminosityBlock() << ":" << iEvent.id().event() << std::endl ;
+		}	
 		
 	      }
 	    }

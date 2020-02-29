@@ -19,18 +19,21 @@ process.load("Geometry.HcalEventSetup.hcalTopologyIdeal_cfi")
 process.MessageLogger.cerr.FwkReport.reportEvery = 500
 
 from Configuration.AlCa.GlobalTag import GlobalTag
-process.GlobalTag = GlobalTag(process.GlobalTag, '102X_upgrade2018_realistic_v15', '')     # 2018 MC
+#process.GlobalTag = GlobalTag(process.GlobalTag, '102X_upgrade2018_realistic_v15', '')     # 2018 MC
 #process.GlobalTag = GlobalTag(process.GlobalTag, '106X_mcRun3_2023_realistic_v3', '')     # 2023 MC
-
+process.GlobalTag = GlobalTag(process.GlobalTag, '110X_mcRun3_2021_realistic_v6', '')     # 2021 MC
+#
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 
 process.source = cms.Source("PoolSource",
                                 fileNames = cms.untracked.vstring(
                    ####samples i made (Single Ele gun )
-                  '/store/user/swmukher/SingleElectronPt2to100/SingleEle_MINIAOD_v3/191125_090555/0000/miniaod_99.root',
-                  '/store/user/swmukher/SingleElectronPt2to100/SingleEle_MINIAOD_v3/191125_090555/0000/miniaod_98.root'
+#                  '/store/user/swmukher/SingleElectronPt2to100/SingleEle_MINIAOD_v3/191125_090555/0000/miniaod_50.root',
+#                  '/store/user/swmukher/SingleElectronPt2to100/SingleEle_MINIAOD_v3/191125_090555/0000/miniaod_96.root'
 #Run3 file to check hcal depths
 #                   '/store/mc/Run3Summer19MiniAOD/DYToEE_M-50_NNPDF31_TuneCP5_14TeV-powheg-pythia8/MINIAODSIM/2023Scenario_106X_mcRun3_2023_realistic_v3-v2/260000/FE3A7D24-F46E-8744-B92B-F6115FD395A0.root'
+#2021 ele gun from Afiq
+                                    '/store/group/phys_egamma/afiqaize/DoubleEle-FlatPt2To250-PU0/DoubleEle-FlatPt2To250-PU0_13TeV-110X_mcRun3_2021_realistic_v6/MINIAODSIM/200226_172748/0000/test_10.root'
                 )
                             )
 
@@ -44,7 +47,7 @@ process.demo = cms.EDAnalyzer('HoEAnalyzer',
        esReducedRecHitCollection = cms.InputTag("reducedEgamma", "reducedESRecHits"),
        genParticleSrc       = cms.InputTag("prunedGenParticles"),
 #       genParticleSrc       = cms.InputTag("genParticles"),
-       Run2_2018_ = cms.bool(True),
+       Run2_2018_ = cms.bool(False),
                               )
 process.TFileService = cms.Service("TFileService", fileName = cms.string('test_MINIAOD.root'))
 
