@@ -435,7 +435,7 @@ HoEAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     double min_dr=9999.9;
     double ptR=9999.9;
     double this_eleGenPt=-99;
-    double this_eleGenE=-99;
+    //double this_eleGenE=-99;
    
     if (genParticlesHandle.isValid()) {
       //std::cout << "starting gen particle loop \n " ;
@@ -455,7 +455,7 @@ HoEAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	    min_dr=this_dr;
 	    ptR=ele.pt()/p->pt();
 	    this_eleGenPt=p->pt();
-	    this_eleGenE=p->energy();
+	    //this_eleGenE=p->energy();
 	  }
 	}  
       }
@@ -615,7 +615,7 @@ HoEAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 		float myDR2seed= reco::deltaR2(var_eleSeedEta, var_eleSeedPhi, rechitEta, rechitPhi) ;
 		float myDRseed=sqrt(myDR2seed);
 
-		if ( (hcalrh.energy() > 6)  && ( myDR > 0.28 )  )  {
+		/*		if ( (hcalrh.energy() > 6)  && ( myDR > 0.28 )  )  {
 		  std::cout << "\nele_SC_eta " << ele.superCluster()->eta() << " ele_SC_phi " << ele.superCluster()->phi() << std::endl;
 		  std::cout << "ele_seed_eta " << var_eleSeedEta << " ele_seed_phi " << var_eleSeedPhi  << std::endl;
 		  std::cout << "ele gen pt " << this_eleGenPt << " GeV, ele gen energy " << this_eleGenE << " GeV" <<std::endl;
@@ -624,7 +624,7 @@ HoEAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 		  std::cout << "dR(ele,hcal rechit) " << myDR << std::endl;
 		  std::cout << "dR(ele seed,hcal rechit) " << myDRseed << std::endl;
 		  std::cout << "run:lumi:event " << iEvent.id().run()<< ":" << iEvent.luminosityBlock() << ":" << iEvent.id().event() << std::endl ;
-		}	
+		  }*/	
 		
 	      }
 	    }
