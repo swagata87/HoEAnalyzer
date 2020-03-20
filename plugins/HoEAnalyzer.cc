@@ -56,6 +56,7 @@
 #include "DataFormats/HepMCCandidate/interface/GenParticle.h"
 #include "DataFormats/Math/interface/deltaR.h"
 #include "DataFormats/HcalRecHit/interface/HcalRecHitCollections.h"
+#include "DataFormats/CaloRecHit/interface/CaloCluster.h"
 #include "RecoEgamma/EgammaIsolationAlgos/interface/EgammaHcalIsolation.h"
 #include "RecoEgamma/EgammaElectronAlgos/interface/ElectronHcalHelper.h"
 #include "Geometry/CaloTopology/interface/CaloTowerConstituentsMap.h"
@@ -93,6 +94,7 @@ public:
   std::vector<int>  ele_isEEDeeGap; // true if particle is in EE, and inside the gaps between dees
   std::vector<int>  ele_isEERingGap; // true if particle is in EE, and inside the gaps between rings
   std::vector<int>  ele_isGap; 
+  std::vector<int>  ele_nearGap; 
   //
   std::vector<int>  ele_golden;
   std::vector<int>  ele_unknown;
@@ -237,6 +239,7 @@ HoEAnalyzer::HoEAnalyzer(const edm::ParameterSet& iConfig)
   tree->Branch("ele_isEEDeeGap_",&ele_isEEDeeGap);
   tree->Branch("ele_isEERingGap_",&ele_isEERingGap);
   tree->Branch("ele_isGap_",&ele_isGap);
+  tree->Branch("ele_nearGap_",&ele_nearGap);
   //
   tree->Branch("ele_golden_",&ele_golden);
   tree->Branch("ele_unknown_",&ele_unknown);
@@ -334,6 +337,7 @@ HoEAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   ele_isEEDeeGap.clear();
   ele_isEERingGap.clear();
   ele_isGap.clear();
+  ele_nearGap.clear();
   //
   ele_golden.clear();
   ele_unknown.clear();
@@ -430,7 +434,7 @@ HoEAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   
   
   for(const auto& ele : iEvent.get(eleToken_) ) {
-    ///   std::cout << "\n new electron ...\n" ;
+    //    std::cout << "\n new electron ...\n" ;
     int genmatched=0;
     double min_dr=9999.9;
     double ptR=9999.9;
@@ -497,6 +501,7 @@ HoEAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     ele_isEEDeeGap.push_back(ele.isEEDeeGap());
     ele_isEERingGap.push_back(ele.isEERingGap());
     ele_isGap.push_back(ele.isGap());
+    //    std::cout << "ele.isGap() = " << ele.isGap() << std::endl;
 
     reco::GsfElectron::PflowIsolationVariables pfIso = ele.pfIsolationVariables();
     elePFNeuIso.push_back(pfIso.sumNeutralHadronEt);
@@ -516,6 +521,46 @@ HoEAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
     const reco::SuperCluster& superClus = *ele.superCluster();
     const reco::CaloCluster &seedCluster = *superClus.seed();
+
+    int nClusNextToBoundary=0;
+    int isNearGap=0;
+    //tag ele near gap
+    //    int nclus = superClus.clusters().size();
+    //std::cout << "number of clusters " << nclus << std::endl;
+    if (superClus.clusters().isAvailable()) {
+      for (auto& bc : superClus.clusters() ) {
+	DetId bcId = bc->hitsAndFractions()[0].first;
+	int detector = bcId.subdetId();
+	//barrel
+	if (detector == EcalBarrel) {
+	  EBDetId ebdetid(bcId);
+	  if (  (EBDetId::isNextToEtaBoundary(ebdetid))  ||   (EBDetId::isNextToPhiBoundary(ebdetid))   ) {
+	    //   std::cout << "this cluster is in eta or phi gap" << std::endl;
+	    nClusNextToBoundary++;
+	  } //next to eta or phi boundary 
+	} //barrel
+	//
+	//endcap
+	else if (detector == EcalEndcap) {
+	  EEDetId eedetid(bcId);
+	  if (  (EEDetId::isNextToRingBoundary(eedetid))  ||   (EEDetId::isNextToDBoundary(eedetid))   ) {
+	    // std::cout << "this cluster is in ring or dee gap" << std::endl;
+	    nClusNextToBoundary++;
+	  } //next to ring or dee boundary 
+	} //endcap
+
+      }
+    }
+
+    //    std::cout << "nClusNextToBoundary " << nClusNextToBoundary << std::endl;
+    if ( (nClusNextToBoundary>0) && (ele.isGap()!=1) ) {
+      isNearGap=1;
+      //std::cout << "tag this ele as near gap, seed cluster not in gap, but another cluster is.. " << std::endl;
+    }
+    
+    //    std::cout << "isNearGap " << isNearGap << std::endl;
+    ele_nearGap.push_back(isNearGap);
+
     DetId seedId = seedCluster.seed() ;
     eleSeedDet.push_back(seedId.det());
     eleSeedSubdet.push_back(seedId.subdetId());
