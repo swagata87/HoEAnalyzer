@@ -62,6 +62,9 @@
 #include "Geometry/CaloTopology/interface/CaloTowerConstituentsMap.h"
 #include "DataFormats/CaloTowers/interface/CaloTowerDetId.h"
 #include "RecoEgamma/EgammaIsolationAlgos/interface/EGHcalRecHitSelector.h"
+#include "DataFormats/EcalDetId/interface/EBDetId.h"
+#include "DataFormats/EcalDetId/interface/EEDetId.h"
+#include "CondFormats/EcalObjects/interface/EcalChannelStatus.h"
 
 //
 // class declaration
@@ -93,8 +96,12 @@ public:
   std::vector<int>  ele_isEBPhiGap; // true if particle is in EB, and inside the phi gaps between modules
   std::vector<int>  ele_isEEDeeGap; // true if particle is in EE, and inside the gaps between dees
   std::vector<int>  ele_isEERingGap; // true if particle is in EE, and inside the gaps between rings
-  std::vector<int>  ele_isGap; 
-  std::vector<int>  ele_nearGap; 
+  std::vector<int>  ele_isGap_cmssw; 
+  std::vector<int>  ele_isGap_custom_without4060; 
+  std::vector<int>  ele_isGap_custom_with4060; 
+  std::vector<int>  ele_nearGap_cmssw;
+  std::vector<int>  ele_nearGap_custom_with4060; 
+  std::vector<int>  ele_nearGap_custom_without4060; 
   //
   std::vector<int>  ele_golden;
   std::vector<int>  ele_unknown;
@@ -238,8 +245,12 @@ HoEAnalyzer::HoEAnalyzer(const edm::ParameterSet& iConfig)
   tree->Branch("ele_isEBPhiGap_",&ele_isEBPhiGap);
   tree->Branch("ele_isEEDeeGap_",&ele_isEEDeeGap);
   tree->Branch("ele_isEERingGap_",&ele_isEERingGap);
-  tree->Branch("ele_isGap_",&ele_isGap);
-  tree->Branch("ele_nearGap_",&ele_nearGap);
+  tree->Branch("ele_isGap_cmssw_",&ele_isGap_cmssw);
+  tree->Branch("ele_isGap_custom_without4060_",&ele_isGap_custom_without4060);
+  tree->Branch("ele_isGap_custom_with4060_",&ele_isGap_custom_with4060);
+  tree->Branch("ele_nearGap_cmssw_",&ele_nearGap_cmssw);
+  tree->Branch("ele_nearGap_custom_with4060_",&ele_nearGap_custom_with4060);
+  tree->Branch("ele_nearGap_custom_without4060_",&ele_nearGap_custom_without4060);
   //
   tree->Branch("ele_golden_",&ele_golden);
   tree->Branch("ele_unknown_",&ele_unknown);
@@ -325,8 +336,7 @@ HoEAnalyzer::~HoEAnalyzer()
 void
 HoEAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
-  
-  //  std::cout << " \n ****** new event ... " << std::endl; 
+  ///  std::cout << " \n ****** new event ... " << std::endl; 
   using namespace edm;
   
   ele_isEB.clear();
@@ -336,8 +346,12 @@ HoEAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   ele_isEBPhiGap.clear();
   ele_isEEDeeGap.clear();
   ele_isEERingGap.clear();
-  ele_isGap.clear();
-  ele_nearGap.clear();
+  ele_isGap_cmssw.clear();
+  ele_isGap_custom_without4060.clear();
+  ele_isGap_custom_with4060.clear();
+  ele_nearGap_cmssw.clear();
+  ele_nearGap_custom_with4060.clear();
+  ele_nearGap_custom_without4060.clear();
   //
   ele_golden.clear();
   ele_unknown.clear();
@@ -500,8 +514,8 @@ HoEAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     ele_isEBPhiGap.push_back(ele.isEBPhiGap()) ;
     ele_isEEDeeGap.push_back(ele.isEEDeeGap());
     ele_isEERingGap.push_back(ele.isEERingGap());
-    ele_isGap.push_back(ele.isGap());
-    //    std::cout << "ele.isGap() = " << ele.isGap() << std::endl;
+    ele_isGap_cmssw.push_back(ele.isGap());
+    //   std::cout << "ele.isGap() = " << ele.isGap() << std::endl;
 
     reco::GsfElectron::PflowIsolationVariables pfIso = ele.pfIsolationVariables();
     elePFNeuIso.push_back(pfIso.sumNeutralHadronEt);
@@ -523,10 +537,8 @@ HoEAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     const reco::CaloCluster &seedCluster = *superClus.seed();
 
     int nClusNextToBoundary=0;
-    int isNearGap=0;
+    int isNearGap_cmssw=0;
     //tag ele near gap
-    //    int nclus = superClus.clusters().size();
-    //std::cout << "number of clusters " << nclus << std::endl;
     if (superClus.clusters().isAvailable()) {
       for (auto& bc : superClus.clusters() ) {
 	DetId bcId = bc->hitsAndFractions()[0].first;
@@ -535,7 +547,6 @@ HoEAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	if (detector == EcalBarrel) {
 	  EBDetId ebdetid(bcId);
 	  if (  (EBDetId::isNextToEtaBoundary(ebdetid))  ||   (EBDetId::isNextToPhiBoundary(ebdetid))   ) {
-	    //   std::cout << "this cluster is in eta or phi gap" << std::endl;
 	    nClusNextToBoundary++;
 	  } //next to eta or phi boundary 
 	} //barrel
@@ -544,24 +555,143 @@ HoEAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	else if (detector == EcalEndcap) {
 	  EEDetId eedetid(bcId);
 	  if (  (EEDetId::isNextToRingBoundary(eedetid))  ||   (EEDetId::isNextToDBoundary(eedetid))   ) {
-	    // std::cout << "this cluster is in ring or dee gap" << std::endl;
 	    nClusNextToBoundary++;
 	  } //next to ring or dee boundary 
 	} //endcap
 
       }
     }
-
-    //    std::cout << "nClusNextToBoundary " << nClusNextToBoundary << std::endl;
-    if ( (nClusNextToBoundary>0) && (ele.isGap()!=1) ) {
-      isNearGap=1;
-      //std::cout << "tag this ele as near gap, seed cluster not in gap, but another cluster is.. " << std::endl;
+    if  (nClusNextToBoundary>0)  {
+      isNearGap_cmssw=1;
     }
-    
-    //    std::cout << "isNearGap " << isNearGap << std::endl;
-    ele_nearGap.push_back(isNearGap);
+    ele_nearGap_cmssw.push_back(isNearGap_cmssw);
+
 
     DetId seedId = seedCluster.seed() ;
+
+    //// Now I'm convinced that CMSSW isGap() is crap for EE. 
+    //// Instead, tag the gap electrons by hardcoding the gaps ieta/iphi, ix/iy 
+    //// Taking help from TrigNtup/src/EGRegTreeStruct.cc from Sam-Harper/usercode ////
+    int isGapcustom=0;
+    float   etaGapCode, phiGapCode ;
+    if ( seedCluster.seed().subdetId()==EcalBarrel ) {
+      EBDetId ebDetId(seedCluster.seed());
+      auto gapCode=[](int iEtaAbs){
+	if(iEtaAbs==25 || iEtaAbs==45 || iEtaAbs==65 || iEtaAbs==85) return -1;//before gap
+	else if(iEtaAbs==1 || iEtaAbs==26 || iEtaAbs==46 || iEtaAbs==66) return 1;//after gap
+	else return 0; //no gap
+      };
+      etaGapCode = gapCode(ebDetId.ietaAbs());
+      phiGapCode = ebDetId.iphi()%20 == 0 ? -1 : ebDetId.iphi()%20 ==1 ? 1 : 0;
+    }else{
+      EEDetId eeDetId(seedCluster.seed());
+      auto gapCode=[](int iAbs){
+	if(iAbs==40 || iAbs==45 || iAbs==50 || iAbs==55 || iAbs==60) return -1;//before gap
+	else if(iAbs==41 || iAbs==46 || iAbs==51 || iAbs==56 || iAbs==61) return 1;//after gap
+	else return 0; //no gap
+      };
+      etaGapCode = gapCode(eeDetId.ix());
+      phiGapCode = gapCode(eeDetId.iy());
+    }
+    if ( (etaGapCode!=0) || (phiGapCode!=0) ) isGapcustom=1 ;
+    ele_isGap_custom_with4060.push_back(isGapcustom);
+
+    //// without 40 60
+    int isGapcustom_without4060=0;
+    float   etaGapCode_without4060, phiGapCode_without4060 ;
+    if ( seedCluster.seed().subdetId()==EcalBarrel ) {
+      EBDetId ebDetId(seedCluster.seed());
+      auto gapCode_without4060=[](int iEtaAbs_without4060){
+	if(iEtaAbs_without4060==25 || iEtaAbs_without4060==45 || iEtaAbs_without4060==65 || iEtaAbs_without4060==85) return -1;//before gap
+	else if(iEtaAbs_without4060==1 || iEtaAbs_without4060==26 || iEtaAbs_without4060==46 || iEtaAbs_without4060==66) return 1;//after gap
+	else return 0; //no gap
+      };
+      etaGapCode_without4060 = gapCode_without4060(ebDetId.ietaAbs());
+      phiGapCode_without4060 = ebDetId.iphi()%20 == 0 ? -1 : ebDetId.iphi()%20 ==1 ? 1 : 0;
+    }else{
+      EEDetId eeDetId(seedCluster.seed());
+      auto gapCode_without4060=[](int iAbs_without4060){
+	if(iAbs_without4060==45 || iAbs_without4060==50 || iAbs_without4060==55 ) return -1;//before gap
+	else if(iAbs_without4060==46 || iAbs_without4060==51 || iAbs_without4060==56 ) return 1;//after gap
+	else return 0; //no gap
+      };
+      etaGapCode_without4060 = gapCode_without4060(eeDetId.ix());
+      phiGapCode_without4060 = gapCode_without4060(eeDetId.iy());
+    }
+    if ( (etaGapCode_without4060!=0) || (phiGapCode_without4060!=0) ) isGapcustom_without4060=1 ;
+    ele_isGap_custom_without4060.push_back(isGapcustom_without4060);
+
+    //////near gap //// with 40 60 ////
+    int nClusNextToBoundary_custom=0;
+    int isNearGapCustom=0;
+    float   etaGapCode2, phiGapCode2 ;
+    if (superClus.clusters().isAvailable()) {
+      for (auto& bc : superClus.clusters() ) {
+	//std::cout << "new basic cluster (custom)\n" ;
+	DetId bcId = bc->hitsAndFractions()[0].first;
+	int detector = bcId.subdetId();
+	if ( detector==EcalBarrel ) {
+	  EBDetId ebDetId(bcId);
+	  auto gapCode2=[](int iEtaAbs2){
+	    if(iEtaAbs2==25 || iEtaAbs2==45 || iEtaAbs2==65 || iEtaAbs2==85) return -1;//before gap
+	    else if(iEtaAbs2==1 || iEtaAbs2==26 || iEtaAbs2==46 || iEtaAbs2==66) return 1;//after gap
+	    else return 0; //no gap
+	  };
+	  etaGapCode2 = gapCode2(ebDetId.ietaAbs());
+	  phiGapCode2 = ebDetId.iphi()%20 == 0 ? -1 : ebDetId.iphi()%20 ==1 ? 1 : 0;
+	}else{
+	  EEDetId eeDetId(bcId);
+	  auto gapCode2=[](int iAbs2){
+	    if(iAbs2==40 || iAbs2==45 || iAbs2==50 || iAbs2==55 || iAbs2==60) return -1;//before gap
+	    else if(iAbs2==41 || iAbs2==46 || iAbs2==51 || iAbs2==56 || iAbs2==61) return 1;//after gap
+	    else return 0; //no gap
+	  };
+	  etaGapCode2 = gapCode2(eeDetId.ix());
+	  phiGapCode2 = gapCode2(eeDetId.iy());
+	}
+	if ( (etaGapCode2!=0) || (phiGapCode2!=0) ) nClusNextToBoundary_custom++ ;
+	//	std::cout << "eta/phi gap ? " << etaGapCode2 << " / " << phiGapCode2 << std::endl;
+      }
+    }
+    if ( nClusNextToBoundary_custom > 0) isNearGapCustom=1;
+    ele_nearGap_custom_with4060.push_back(isNearGapCustom);
+    ////////
+ 
+    //// near gap custom w/o 40 60
+    int nClusNextToBoundary_custom_without4060=0;
+    int isNearGapCustom_without4060=0;
+    float   etaGapCode2_without4060, phiGapCode2_without4060 ;
+    if (superClus.clusters().isAvailable()) {
+      for (auto& bc : superClus.clusters() ) {
+	DetId bcId = bc->hitsAndFractions()[0].first;
+	int detector = bcId.subdetId();
+	if ( detector==EcalBarrel ) {
+	  EBDetId ebDetId(bcId);
+	  auto gapCode2_without4060=[](int iEtaAbs2_without4060){
+	    if(iEtaAbs2_without4060==25 || iEtaAbs2_without4060==45 || iEtaAbs2_without4060==65 || iEtaAbs2_without4060==85) return -1;//before gap
+	    else if(iEtaAbs2_without4060==1 || iEtaAbs2_without4060==26 || iEtaAbs2_without4060==46 || iEtaAbs2_without4060==66) return 1;//after gap
+	    else return 0; //no gap
+	  };
+	  etaGapCode2_without4060 = gapCode2_without4060(ebDetId.ietaAbs());
+	  phiGapCode2_without4060 = ebDetId.iphi()%20 == 0 ? -1 : ebDetId.iphi()%20 ==1 ? 1 : 0;
+	}else{
+	  EEDetId eeDetId(bcId);
+	  auto gapCode2_without4060=[](int iAbs2_without4060){
+	    if(iAbs2_without4060==45 || iAbs2_without4060==50 || iAbs2_without4060==55) return -1;//before gap
+	    else if(iAbs2_without4060==46 || iAbs2_without4060==51 || iAbs2_without4060==56 ) return 1;//after gap
+	    else return 0; //no gap
+	  };
+	  etaGapCode2_without4060 = gapCode2_without4060(eeDetId.ix());
+	  phiGapCode2_without4060 = gapCode2_without4060(eeDetId.iy());
+	}
+	if ( (etaGapCode2_without4060!=0) || (phiGapCode2_without4060!=0) ) nClusNextToBoundary_custom_without4060++ ;
+      }
+    }
+    if ( nClusNextToBoundary_custom_without4060 > 0) isNearGapCustom_without4060=1;
+    ele_nearGap_custom_without4060.push_back(isNearGapCustom_without4060);
+    ////////
+
+
     eleSeedDet.push_back(seedId.det());
     eleSeedSubdet.push_back(seedId.subdetId());
 

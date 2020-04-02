@@ -34,6 +34,7 @@ process.source = cms.Source("PoolSource",
 #                   '/store/mc/Run3Summer19MiniAOD/DYToEE_M-50_NNPDF31_TuneCP5_14TeV-powheg-pythia8/MINIAODSIM/2023Scenario_106X_mcRun3_2023_realistic_v3-v2/260000/FE3A7D24-F46E-8744-B92B-F6115FD395A0.root'
 #2021 ele gun from Afiq
                                     '/store/group/phys_egamma/afiqaize/DoubleEle-FlatPt2To250-PU0/DoubleEle-FlatPt2To250-PU0_13TeV-110X_mcRun3_2021_realistic_v6/MINIAODSIM/200226_172748/0000/test_10.root'
+#                                    '/store/mc/Run3Winter20DRMiniAOD/ZprimeToEE_M-6000_TuneCP5_14TeV-pythia8/MINIAODSIM/FlatPU0to80_110X_mcRun3_2021_realistic_v6-v3/230000/FB256519-697F-B948-9022-AA9F5C3F8775.root'
                 )
                             )
 
