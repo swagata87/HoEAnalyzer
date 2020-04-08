@@ -1,4 +1,4 @@
-from CRABClient.UserUtilities import config, getUsernameFromSiteDB
+from CRABClient.UserUtilities import config #, getUsernameFromSiteDB
 config = config()
 
 config.General.requestName = ''
@@ -8,14 +8,14 @@ config.JobType.pluginName = 'Analysis'
 config.JobType.psetName = '../python/ConfFile_cfg.py'
 
 config.Data.inputDataset = ''
-#config.Data.inputDBS = 'global'
-config.Data.inputDBS = 'phys03'
+config.Data.inputDBS = 'global'
+#config.Data.inputDBS = 'phys03'
 config.Data.splitting = 'FileBased'
-config.Data.unitsPerJob = 15
+config.Data.unitsPerJob = 12
 
-config.Data.outLFNDirBase = '/store/group/phys_egamma/%s/HoE_Feb16_2020/addGapInfo/2018Gun/' % (getUsernameFromSiteDB())
+config.Data.outLFNDirBase = '/store/group/phys_egamma/swmukher/HoE_April_2020/' #% (getUsernameFromSiteDB())
 config.Data.publication = False
-config.Data.outputDatasetTag = 'run2_HoE_2018'
+config.Data.outputDatasetTag = 'Sample2021'
 config.Site.storageSite = 'T2_CH_CERN'
 config.Site.ignoreGlobalBlacklist = True
 
@@ -28,7 +28,7 @@ if __name__ == '__main__':
     # We want to put all the CRAB project directories from the tasks we submit here into one common directory.
     # That's why we need to set this parameter (here or above in the configuration file, it does not matter, we will not overwrite it).
     
-    config.General.workArea = 'crab_mc_Feb21_2020' 
+    config.General.workArea = 'crab_mc_march_2020' 
 
     def submit(config):
         try:
@@ -95,7 +95,34 @@ if __name__ == '__main__':
 #    config.Data.inputDataset = '/TTToSemiLeptonic_TuneCP5_13TeV-powheg-pythia8/RunIIAutumn18MiniAOD-102X_upgrade2018_realistic_v15-v1/MINIAODSIM'
 #    submit(config)
 
-    config.General.requestName = 'SingleElectronPt2to100_addGapinfo'
-    config.Data.inputDataset = '/SingleElectronPt2to100/swmukher-SingleEle_MINIAOD_v3-dc6c4d7cf95a40d6b181c54570d8d0c3/USER'
-    submit(config)
+#    config.General.requestName = 'SingleElectronPt2to100_addGapinfo'
+#    config.Data.inputDataset = '/SingleElectronPt2to100/swmukher-SingleEle_MINIAOD_v3-dc6c4d7cf95a40d6b181c54570d8d0c3/USER'
+#    submit(config)
+
+#Run3Winter20 2021 samples
+
+#    config.General.requestName = 'ZprimeToEE_M6000'
+#    config.Data.inputDataset = '/ZprimeToEE_M-6000_TuneCP5_14TeV-pythia8/Run3Winter20DRMiniAOD-FlatPU0to80_110X_mcRun3_2021_realistic_v6-v3/MINIAODSIM'
+#    submit(config)     
+
+#    config.General.requestName = 'QCD_Pt_600oInf'
+#    config.Data.inputDataset = '/QCD_Pt_600oInf_TuneCP5_14TeV_pythia8/Run3Winter20DRPremixMiniAOD-110X_mcRun3_2021_realistic_v6-v2/MINIAODSIM'
+#    submit(config)     
+
+#    config.General.requestName = 'DoubleEle_FlatPt2To250_PU0'
+#    config.Data.inputDataset = '/DoubleEle-FlatPt2To250-PU0_13TeV-110X_mcRun3_2021_realistic_v6/afiqaize-MINIAODSIM-28ea11753f803e89e7fd3e375196acc9/USER'
+#    submit(config)     
+
+    config.General.requestName = 'ttbar'
+    config.Data.inputDataset = '/TTbar_14TeV_TuneCP5_Pythia8/Run3Winter20DRMiniAOD-FlatPU0to80ALCARECO_110X_mcRun3_2021_realistic_v6-v2/MINIAODSIM'
+    submit(config)     
+
+    config.General.requestName = 'qcd'
+    config.Data.inputDataset = '/QCD_Pt-15to3000_TuneCP5_Flat_14TeV_pythia8/Run3Winter20DRMiniAOD-DRFlatPU30to80_110X_mcRun3_2021_realistic_v6-v2/MINIAODSIM'
+    submit(config)     
+
+    config.General.requestName = 'dytoll'
+    config.Data.inputDataset = '/DYToLL_M-50_TuneCP5_14TeV-pythia8/Run3Winter20DRMiniAOD-DRFlatPU30to80_110X_mcRun3_2021_realistic_v6-v2/MINIAODSIM'
+    submit(config)     
+
 

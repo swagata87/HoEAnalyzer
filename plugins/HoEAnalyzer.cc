@@ -65,6 +65,8 @@
 #include "DataFormats/EcalDetId/interface/EBDetId.h"
 #include "DataFormats/EcalDetId/interface/EEDetId.h"
 #include "CondFormats/EcalObjects/interface/EcalChannelStatus.h"
+#include "DataFormats/PatCandidates/interface/Photon.h"
+#include "DataFormats/PatCandidates/interface/Electron.h"
 
 //
 // class declaration
@@ -89,13 +91,15 @@ public:
   //
   //geometry & gap info
   //
+  std::vector<std::vector<int> > eleIDbits;
+  //
   std::vector<int>  ele_isEB; // true if particle is in ECAL Barrel
   std::vector<int>  ele_isEE; // true if particle is in ECAL Endcaps
-  std::vector<int>  ele_isEBEEGap; // true if particle is in the crack between EB and EE
-  std::vector<int>  ele_isEBEtaGap; // true if particle is in EB, and inside the eta gaps between modules
-  std::vector<int>  ele_isEBPhiGap; // true if particle is in EB, and inside the phi gaps between modules
-  std::vector<int>  ele_isEEDeeGap; // true if particle is in EE, and inside the gaps between dees
-  std::vector<int>  ele_isEERingGap; // true if particle is in EE, and inside the gaps between rings
+  //  std::vector<int>  ele_isEBEEGap; // true if particle is in the crack between EB and EE
+  // std::vector<int>  ele_isEBEtaGap; // true if particle is in EB, and inside the eta gaps between modules
+  // std::vector<int>  ele_isEBPhiGap; // true if particle is in EB, and inside the phi gaps between modules
+  // std::vector<int>  ele_isEEDeeGap; // true if particle is in EE, and inside the gaps between dees
+  // std::vector<int>  ele_isEERingGap; // true if particle is in EE, and inside the gaps between rings
   std::vector<int>  ele_isGap_cmssw; 
   std::vector<int>  ele_isGap_custom_without4060; 
   std::vector<int>  ele_isGap_custom_with4060; 
@@ -103,15 +107,15 @@ public:
   std::vector<int>  ele_nearGap_custom_with4060; 
   std::vector<int>  ele_nearGap_custom_without4060; 
   //
-  std::vector<int>  ele_golden;
-  std::vector<int>  ele_unknown;
-  std::vector<int>  ele_bigbrem;
-  std::vector<int>  ele_badtrack;
-  std::vector<int>  ele_showering;
-  std::vector<int>  ele_gap;
-  std::vector<float> ele_trackFbrem;
-  std::vector<float> ele_superClusterFbrem;
-  std::vector<int> ele_numberOfBrems;
+  //  std::vector<int>  ele_golden;
+  // std::vector<int>  ele_unknown;
+  // std::vector<int>  ele_bigbrem;
+  // std::vector<int>  ele_badtrack;
+  // std::vector<int>  ele_showering;
+  // std::vector<int>  ele_gap;
+  // std::vector<float> ele_trackFbrem;
+  // std::vector<float> ele_superClusterFbrem;
+  // std::vector<int> ele_numberOfBrems;
   std::vector<int>  ele_genmatched;
   std::vector<float>  scEn;
   std::vector<float>  dR_recoEle_genEle;
@@ -127,6 +131,8 @@ public:
   std::vector<float>  eleScPhi;
   std::vector<float>  elePt;
   std::vector<float>  eleGenPt;
+  std::vector<float>  eleGenEta;
+  std::vector<float>  eleGenPhi;
   std::vector<float>  ele_full5x5_r9;
   std::vector<float>  elePhi;
   std::vector<float>  eleSigmaIEtaIEtaFull5x5;
@@ -134,15 +140,15 @@ public:
   std::vector<float>  elePFNeuIso;
   std::vector<float>  elePFChIso;
   std::vector<float>  elePFPhoIso;
-  std::vector<float>  elePFPUIso;
+  //  std::vector<float>  elePFPUIso;
   std::vector<float>  ele_hcalPFClusterIso;
-  std::vector<float>  ele_ecalPFClusterIso;
-  std::vector<float>  ele_dr03EcalRecHitSumEt;
+  // std::vector<float>  ele_ecalPFClusterIso;
+  // std::vector<float>  ele_dr03EcalRecHitSumEt;
   std::vector<float>  ele_dr03HcalTowerSumEt;
-  std::vector<float>  ele_dr03HcalDepth1TowerSumEt;
-  std::vector<float>  ele_dr03HcalDepth2TowerSumEt;
-  std::vector<float>  ele_dr03TkSumPt;
-  std::vector<float>  ele_dr03TkSumPtHEEP;
+  //std::vector<float>  ele_dr03HcalDepth1TowerSumEt;
+  //std::vector<float>  ele_dr03HcalDepth2TowerSumEt;
+  // std::vector<float>  ele_dr03TkSumPt;
+  // std::vector<float>  ele_dr03TkSumPtHEEP;
 
   //
   std::vector<int>    eleSeedDet;
@@ -151,16 +157,16 @@ public:
   std::vector<int>    eleSeedIphi;
   std::vector<float>  eleSeedEta;
   std::vector<float>  eleSeedPhi;
-  std::vector<int>    eleSeedRawID;
+  //  std::vector<int>    eleSeedRawID;
   std::vector<int>    seedHcalIeta;
   std::vector<int>    seedHcalIphi;
 
   std::vector<std::vector<int>>    hcalRechitIeta;
   std::vector<std::vector<int>>    hcalRechitIphi;
   std::vector<std::vector<float>>  hcalRechitEnergy;
-  std::vector<std::vector<int>>    hcalRechitAbsDIetaFromEleSeed;
-  std::vector<std::vector<int>>    hcalRechitAbsDIphiFromEleSeed;
-  std::vector<std::vector<int>>    hcalRechitRawID;
+  // std::vector<std::vector<int>>    hcalRechitAbsDIetaFromEleSeed;
+  // std::vector<std::vector<int>>    hcalRechitAbsDIphiFromEleSeed;
+  //  std::vector<std::vector<int>>    hcalRechitRawID;
   std::vector<std::vector<int>>    hcalRechitDepth; // mostly for Run 3 //
   std::vector<std::vector<float>>    hcalRechitEta;
   std::vector<std::vector<float>>    hcalRechitPhi;
@@ -168,9 +174,9 @@ public:
   std::vector<int>    perEle_hcalRechitIeta;
   std::vector<int>    perEle_hcalRechitIphi;
   std::vector<float>  perEle_hcalRechitEnergy;
-  std::vector<int>    perEle_hcalRechitAbsDIetaFromEleSeed;
-  std::vector<int>    perEle_hcalRechitAbsDIphiFromEleSeed;
-  std::vector<int>    perEle_hcalRechitRawID;
+  //  std::vector<int>    perEle_hcalRechitAbsDIetaFromEleSeed;
+  // std::vector<int>    perEle_hcalRechitAbsDIphiFromEleSeed;
+  // std::vector<int>    perEle_hcalRechitRawID;
   std::vector<int>    perEle_hcalRechitDepth; // mostly for Run 3 //
   std::vector<float>  perEle_hcalRechitEta;
   std::vector<float>  perEle_hcalRechitPhi;
@@ -182,7 +188,7 @@ public:
   std::vector<int> event_number;
   //
 
-  float rho;
+  std::vector<float> rho;
 
   
 private:
@@ -198,7 +204,8 @@ private:
 
   // ----------member data ---------------------------
   edm::EDGetTokenT<double> rhoLabel_;
-  edm::EDGetTokenT<edm::View<reco::GsfElectron> > eleToken_;
+  //  edm::EDGetTokenT<edm::View<reco::GsfElectron> > eleToken_;
+  edm::EDGetTokenT<edm::View<pat::Electron> > eleToken_;
   edm::EDGetTokenT<std::vector<PileupSummaryInfo> >     puCollection_;
   edm::EDGetTokenT<HBHERecHitCollection> hbhe_rechits_;
   edm::EDGetTokenT<EcalRecHitCollection> ebReducedRecHitCollection_;
@@ -225,7 +232,8 @@ private:
 HoEAnalyzer::HoEAnalyzer(const edm::ParameterSet& iConfig)
   :
   rhoLabel_(consumes<double>(iConfig.getParameter<edm::InputTag>("rhoLabel"))),
-  eleToken_(consumes<edm::View<reco::GsfElectron> >(iConfig.getParameter<edm::InputTag>("electrons"))),
+  eleToken_(consumes<edm::View<pat::Electron> >(iConfig.getParameter<edm::InputTag>("electrons"))),
+  //  eleToken_(consumes<edm::View<reco::GsfElectron> >(iConfig.getParameter<edm::InputTag>("electrons"))),
   puCollection_(consumes<std::vector<PileupSummaryInfo> >(iConfig.getParameter<edm::InputTag>("pileupCollection"))),
   hbhe_rechits_(consumes<HBHERecHitCollection>(iConfig.getParameter<edm::InputTag>("hbheInput"))),
   ebReducedRecHitCollection_(consumes<EcalRecHitCollection>(iConfig.getParameter<edm::InputTag>("ebReducedRecHitCollection"))),
@@ -237,14 +245,16 @@ HoEAnalyzer::HoEAnalyzer(const edm::ParameterSet& iConfig)
 {
   //now do what ever initialization is needed
 
+  tree->Branch("eleIDbits_", &eleIDbits);
+
   // geometry, gaps etc info
   tree->Branch("ele_isEB_",&ele_isEB);
   tree->Branch("ele_isEE_",&ele_isEE);
-  tree->Branch("ele_isEBEEGap_",&ele_isEBEEGap);
-  tree->Branch("ele_isEBEtaGap_",&ele_isEBEtaGap);
-  tree->Branch("ele_isEBPhiGap_",&ele_isEBPhiGap);
-  tree->Branch("ele_isEEDeeGap_",&ele_isEEDeeGap);
-  tree->Branch("ele_isEERingGap_",&ele_isEERingGap);
+  //  tree->Branch("ele_isEBEEGap_",&ele_isEBEEGap);
+  //  tree->Branch("ele_isEBEtaGap_",&ele_isEBEtaGap);
+  //  tree->Branch("ele_isEBPhiGap_",&ele_isEBPhiGap);
+  //  tree->Branch("ele_isEEDeeGap_",&ele_isEEDeeGap);
+  //  tree->Branch("ele_isEERingGap_",&ele_isEERingGap);
   tree->Branch("ele_isGap_cmssw_",&ele_isGap_cmssw);
   tree->Branch("ele_isGap_custom_without4060_",&ele_isGap_custom_without4060);
   tree->Branch("ele_isGap_custom_with4060_",&ele_isGap_custom_with4060);
@@ -252,15 +262,15 @@ HoEAnalyzer::HoEAnalyzer(const edm::ParameterSet& iConfig)
   tree->Branch("ele_nearGap_custom_with4060_",&ele_nearGap_custom_with4060);
   tree->Branch("ele_nearGap_custom_without4060_",&ele_nearGap_custom_without4060);
   //
-  tree->Branch("ele_golden_",&ele_golden);
-  tree->Branch("ele_unknown_",&ele_unknown);
-  tree->Branch("ele_bigbrem_",&ele_bigbrem);
-  tree->Branch("ele_gap_",&ele_gap);
-  tree->Branch("ele_badtrack_",&ele_badtrack);
-  tree->Branch("ele_showering_",&ele_showering);
-  tree->Branch("ele_trackFbrem_",&ele_trackFbrem);
-  tree->Branch("ele_superClusterFbrem_",&ele_superClusterFbrem);
-  tree->Branch("ele_numberOfBrems_",&ele_numberOfBrems);
+  //  tree->Branch("ele_golden_",&ele_golden);
+  // tree->Branch("ele_unknown_",&ele_unknown);
+  //  tree->Branch("ele_bigbrem_",&ele_bigbrem);
+  // tree->Branch("ele_gap_",&ele_gap);
+  // tree->Branch("ele_badtrack_",&ele_badtrack);
+  //  tree->Branch("ele_showering_",&ele_showering);
+  //  tree->Branch("ele_trackFbrem_",&ele_trackFbrem);
+  // tree->Branch("ele_superClusterFbrem_",&ele_superClusterFbrem);
+  // tree->Branch("ele_numberOfBrems_",&ele_numberOfBrems);
   tree->Branch("ele_genmatched_",&ele_genmatched);
   tree->Branch("dR_recoEle_genEle_",&dR_recoEle_genEle);
   tree->Branch("ptRecoEle_by_ptGenEle_",&ptRecoEle_by_ptGenEle);
@@ -276,21 +286,23 @@ HoEAnalyzer::HoEAnalyzer(const edm::ParameterSet& iConfig)
   tree->Branch("eleScPhi_",&eleScPhi);
   tree->Branch("elePt_",&elePt);
   tree->Branch("eleGenPt_",&eleGenPt);
+  tree->Branch("eleGenEta_",&eleGenEta);
+  tree->Branch("eleGenPhi_",&eleGenPhi);
   tree->Branch("ele_full5x5_r9_",&ele_full5x5_r9);
   tree->Branch("elePhi_",&elePhi);
   tree->Branch("eleSigmaIEtaIEtaFull5x5_",&eleSigmaIEtaIEtaFull5x5);
   tree->Branch("elePFNeuIso_",&elePFNeuIso);
   tree->Branch("elePFChIso_",&elePFChIso);
   tree->Branch("elePFPhoIso_",&elePFPhoIso);
-  tree->Branch("elePFPUIso_",&elePFPUIso);
+  //  tree->Branch("elePFPUIso_",&elePFPUIso);
   tree->Branch("ele_hcalPFClusterIso_",&ele_hcalPFClusterIso);
-  tree->Branch("ele_ecalPFClusterIso_",&ele_ecalPFClusterIso);
-  tree->Branch("ele_dr03EcalRecHitSumEt_",&ele_dr03EcalRecHitSumEt);
+  // tree->Branch("ele_ecalPFClusterIso_",&ele_ecalPFClusterIso);
+  // tree->Branch("ele_dr03EcalRecHitSumEt_",&ele_dr03EcalRecHitSumEt);
   tree->Branch("ele_dr03HcalTowerSumEt_",&ele_dr03HcalTowerSumEt);
-  tree->Branch("ele_dr03HcalDepth1TowerSumEt_",&ele_dr03HcalDepth1TowerSumEt);
-  tree->Branch("ele_dr03HcalDepth2TowerSumEt_",&ele_dr03HcalDepth2TowerSumEt);
-  tree->Branch("ele_dr03TkSumPt_",&ele_dr03TkSumPt);
-  tree->Branch("ele_dr03TkSumPtHEEP_",&ele_dr03TkSumPtHEEP);
+  // tree->Branch("ele_dr03HcalDepth1TowerSumEt_",&ele_dr03HcalDepth1TowerSumEt);
+  //  tree->Branch("ele_dr03HcalDepth2TowerSumEt_",&ele_dr03HcalDepth2TowerSumEt);
+  // tree->Branch("ele_dr03TkSumPt_",&ele_dr03TkSumPt);
+  // tree->Branch("ele_dr03TkSumPtHEEP_",&ele_dr03TkSumPtHEEP);
 
   tree->Branch("eleSeedDet_",&eleSeedDet);
   tree->Branch("eleSeedSubdet_",&eleSeedSubdet);
@@ -298,15 +310,15 @@ HoEAnalyzer::HoEAnalyzer(const edm::ParameterSet& iConfig)
   tree->Branch("eleSeedIphi_",&eleSeedIphi);
   tree->Branch("eleSeedEta_",&eleSeedEta);
   tree->Branch("eleSeedPhi_",&eleSeedPhi);
-  tree->Branch("eleSeedRawID_",&eleSeedRawID);
+  //  tree->Branch("eleSeedRawID_",&eleSeedRawID);
   tree->Branch("seedHcalIeta_",&seedHcalIeta);
   tree->Branch("seedHcalIphi_",&seedHcalIphi);
   tree->Branch("hcalRechitIeta_",&hcalRechitIeta);
   tree->Branch("hcalRechitIphi_",&hcalRechitIphi);
   tree->Branch("hcalRechitEnergy_",&hcalRechitEnergy);
-  tree->Branch("hcalRechitAbsDIetaFromEleSeed_",&hcalRechitAbsDIetaFromEleSeed);
-  tree->Branch("hcalRechitAbsDIphiFromEleSeed_",&hcalRechitAbsDIphiFromEleSeed);
-  tree->Branch("hcalRechitRawID_",&hcalRechitRawID);
+  //  tree->Branch("hcalRechitAbsDIetaFromEleSeed_",&hcalRechitAbsDIetaFromEleSeed);
+  // tree->Branch("hcalRechitAbsDIphiFromEleSeed_",&hcalRechitAbsDIphiFromEleSeed);
+  //  tree->Branch("hcalRechitRawID_",&hcalRechitRawID);
   tree->Branch("hcalRechitDepth_",&hcalRechitDepth);
   tree->Branch("hcalRechitEta_",&hcalRechitEta);
   tree->Branch("hcalRechitPhi_",&hcalRechitPhi);
@@ -339,13 +351,15 @@ HoEAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   ///  std::cout << " \n ****** new event ... " << std::endl; 
   using namespace edm;
   
+  eleIDbits.clear();
+  //
   ele_isEB.clear();
   ele_isEE.clear();
-  ele_isEBEEGap.clear();
-  ele_isEBEtaGap.clear();
-  ele_isEBPhiGap.clear();
-  ele_isEEDeeGap.clear();
-  ele_isEERingGap.clear();
+  //  ele_isEBEEGap.clear();
+  //  ele_isEBEtaGap.clear();
+  //  ele_isEBPhiGap.clear();
+  // ele_isEEDeeGap.clear();
+  // ele_isEERingGap.clear();
   ele_isGap_cmssw.clear();
   ele_isGap_custom_without4060.clear();
   ele_isGap_custom_with4060.clear();
@@ -353,15 +367,15 @@ HoEAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   ele_nearGap_custom_with4060.clear();
   ele_nearGap_custom_without4060.clear();
   //
-  ele_golden.clear();
-  ele_unknown.clear();
-  ele_badtrack.clear();
-  ele_bigbrem.clear();
-  ele_showering.clear();
-  ele_gap.clear();
-  ele_trackFbrem.clear();
-  ele_superClusterFbrem.clear();
-  ele_numberOfBrems.clear();
+  //  ele_golden.clear();
+  // ele_unknown.clear();
+  // ele_badtrack.clear();
+  //  ele_bigbrem.clear();
+  //  ele_showering.clear();
+  // ele_gap.clear();
+  // ele_trackFbrem.clear();
+  //  ele_superClusterFbrem.clear();
+  // ele_numberOfBrems.clear();
   ele_genmatched.clear();
   ptRecoEle_by_ptGenEle.clear();
   dR_recoEle_genEle.clear();
@@ -377,21 +391,23 @@ HoEAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   eleScPhi.clear();
   elePt.clear();
   eleGenPt.clear();
+  eleGenEta.clear();
+  eleGenPhi.clear();
   ele_full5x5_r9.clear();
   elePhi.clear();
   eleSigmaIEtaIEtaFull5x5.clear();
   elePFNeuIso.clear();
   elePFChIso.clear();
   elePFPhoIso.clear();
-  elePFPUIso.clear();
+  //  elePFPUIso.clear();
   ele_hcalPFClusterIso.clear();
-  ele_ecalPFClusterIso.clear();
-  ele_dr03EcalRecHitSumEt.clear();
+  // ele_ecalPFClusterIso.clear();
+  // ele_dr03EcalRecHitSumEt.clear();
   ele_dr03HcalTowerSumEt.clear();
-  ele_dr03HcalDepth1TowerSumEt.clear();
-  ele_dr03HcalDepth2TowerSumEt.clear();
-  ele_dr03TkSumPt.clear();
-  ele_dr03TkSumPtHEEP.clear();
+  //  ele_dr03HcalDepth1TowerSumEt.clear();
+  // ele_dr03HcalDepth2TowerSumEt.clear();
+  // ele_dr03TkSumPt.clear();
+  // ele_dr03TkSumPtHEEP.clear();
 
   eleSeedDet.clear();
   eleSeedSubdet.clear();
@@ -399,20 +415,21 @@ HoEAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   eleSeedIphi.clear();
   eleSeedEta.clear();
   eleSeedPhi.clear();
-  eleSeedRawID.clear();
+  // eleSeedRawID.clear();
   seedHcalIeta.clear();
   seedHcalIphi.clear();
 
   hcalRechitIeta.clear();
   hcalRechitIphi.clear();
   hcalRechitEnergy.clear();
-  hcalRechitAbsDIetaFromEleSeed.clear();
-  hcalRechitAbsDIphiFromEleSeed.clear();
-  hcalRechitRawID.clear();
+  //  hcalRechitAbsDIetaFromEleSeed.clear();
+  //  hcalRechitAbsDIphiFromEleSeed.clear();
+  // hcalRechitRawID.clear();
   hcalRechitDepth.clear();
   hcalRechitEta.clear();
   hcalRechitPhi.clear();
 
+  rho.clear();
   puTrue.clear();
   run_number.clear();
   lumi_number.clear(); 
@@ -426,7 +443,7 @@ HoEAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
   edm::Handle<double> rhoHandle;
   iEvent.getByToken(rhoLabel_, rhoHandle);
-  rho = *(rhoHandle.product());
+  rho.push_back(*(rhoHandle.product()));
 
   edm::Handle<std::vector<PileupSummaryInfo> > genPileupHandle;
   iEvent.getByToken(puCollection_, genPileupHandle);
@@ -449,10 +466,20 @@ HoEAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   
   for(const auto& ele : iEvent.get(eleToken_) ) {
     //    std::cout << "\n new electron ...\n" ;
+
+    eleIDbits.push_back({          
+	ele.userInt("cutBasedElectronID-Fall17-94X-V2-veto"),
+	  ele.userInt("cutBasedElectronID-Fall17-94X-V2-loose"),
+	  ele.userInt("cutBasedElectronID-Fall17-94X-V2-medium"),
+	  ele.userInt("cutBasedElectronID-Fall17-94X-V2-tight"),
+	  ele.userInt("heepElectronID-HEEPV70")});
+
     int genmatched=0;
     double min_dr=9999.9;
     double ptR=9999.9;
     double this_eleGenPt=-99;
+    double this_eleGenEta=-99;
+    double this_eleGenPhi=-99;
     //double this_eleGenE=-99;
    
     if (genParticlesHandle.isValid()) {
@@ -473,6 +500,8 @@ HoEAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	    min_dr=this_dr;
 	    ptR=ele.pt()/p->pt();
 	    this_eleGenPt=p->pt();
+	    this_eleGenEta=p->eta();
+	    this_eleGenPhi=p->phi();
 	    //this_eleGenE=p->energy();
 	  }
 	}  
@@ -491,9 +520,9 @@ HoEAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     perEle_hcalRechitIeta.clear();
     perEle_hcalRechitIphi.clear();
     perEle_hcalRechitEnergy.clear();
-    perEle_hcalRechitAbsDIetaFromEleSeed.clear();
-    perEle_hcalRechitAbsDIphiFromEleSeed.clear();
-    perEle_hcalRechitRawID.clear();
+    // perEle_hcalRechitAbsDIetaFromEleSeed.clear();
+    // perEle_hcalRechitAbsDIphiFromEleSeed.clear();
+    // perEle_hcalRechitRawID.clear();
     perEle_hcalRechitDepth.clear();
     perEle_hcalRechitEta.clear();
     perEle_hcalRechitPhi.clear();
@@ -502,6 +531,8 @@ HoEAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     eleScPhi.push_back(ele.superCluster()->phi());
     elePt.push_back(ele.pt());
     eleGenPt.push_back(this_eleGenPt);
+    eleGenEta.push_back(this_eleGenEta);
+    eleGenPhi.push_back(this_eleGenPhi);
     ele_full5x5_r9.push_back(ele.full5x5_r9());
     elePhi.push_back(ele.phi());
     eleSigmaIEtaIEtaFull5x5.push_back(ele.full5x5_sigmaIetaIeta());
@@ -509,11 +540,11 @@ HoEAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     //gap, geometry etc
     ele_isEB.push_back(ele.isEB()) ;
     ele_isEE.push_back(ele.isEE()) ;
-    ele_isEBEEGap.push_back(ele.isEBEEGap()) ;
-    ele_isEBEtaGap.push_back(ele.isEBEtaGap()) ;
-    ele_isEBPhiGap.push_back(ele.isEBPhiGap()) ;
-    ele_isEEDeeGap.push_back(ele.isEEDeeGap());
-    ele_isEERingGap.push_back(ele.isEERingGap());
+    //   ele_isEBEEGap.push_back(ele.isEBEEGap()) ;
+    //  ele_isEBEtaGap.push_back(ele.isEBEtaGap()) ;
+    //  ele_isEBPhiGap.push_back(ele.isEBPhiGap()) ;
+    // ele_isEEDeeGap.push_back(ele.isEEDeeGap());
+    //  ele_isEERingGap.push_back(ele.isEERingGap());
     ele_isGap_cmssw.push_back(ele.isGap());
     //   std::cout << "ele.isGap() = " << ele.isGap() << std::endl;
 
@@ -521,15 +552,15 @@ HoEAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     elePFNeuIso.push_back(pfIso.sumNeutralHadronEt);
     elePFChIso.push_back(pfIso.sumChargedHadronPt);
     elePFPhoIso.push_back(pfIso.sumPhotonEt);
-    elePFPUIso.push_back(pfIso.sumPUPt);
+    // elePFPUIso.push_back(pfIso.sumPUPt);
     ele_hcalPFClusterIso.push_back(ele.hcalPFClusterIso());
-    ele_ecalPFClusterIso.push_back(ele.ecalPFClusterIso());
-    ele_dr03EcalRecHitSumEt.push_back(ele.dr03EcalRecHitSumEt());
+    // ele_ecalPFClusterIso.push_back(ele.ecalPFClusterIso());
+    // ele_dr03EcalRecHitSumEt.push_back(ele.dr03EcalRecHitSumEt());
     ele_dr03HcalTowerSumEt.push_back(ele.dr03HcalTowerSumEt());
-    ele_dr03HcalDepth1TowerSumEt.push_back(ele.dr03HcalDepth1TowerSumEt());
-    ele_dr03HcalDepth2TowerSumEt.push_back(ele.dr03HcalDepth2TowerSumEt());
-    ele_dr03TkSumPt.push_back(ele.dr03TkSumPt());
-    ele_dr03TkSumPtHEEP.push_back(ele.dr03TkSumPtHEEP());
+    // ele_dr03HcalDepth1TowerSumEt.push_back(ele.dr03HcalDepth1TowerSumEt());
+    // ele_dr03HcalDepth2TowerSumEt.push_back(ele.dr03HcalDepth2TowerSumEt());
+    //ele_dr03TkSumPt.push_back(ele.dr03TkSumPt());
+    //ele_dr03TkSumPtHEEP.push_back(ele.dr03TkSumPtHEEP());
 
     EcalClusterLazyTools       lazyTool    (iEvent, iSetup, ebReducedRecHitCollection_, eeReducedRecHitCollection_, esReducedRecHitCollection_);
 
@@ -725,7 +756,7 @@ HoEAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   
     int var_eleSeedIeta=-999;
     int var_eleSeedIphi=-999;
-    int var_eleSeedRawID=-999;
+    //    int var_eleSeedRawID=-999;
     
     int  var_seedHcalIeta=-999;
     int  var_seedHcalIphi=-999;
@@ -735,14 +766,14 @@ HoEAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	EBDetId ebId(seedId);
 	var_eleSeedIeta=ebId.ieta();
 	var_eleSeedIphi=ebId.iphi();
-	var_eleSeedRawID=ebId.rawId();       
+	//var_eleSeedRawID=ebId.rawId();       
       }
       
       else if (seedId.subdetId() == EcalEndcap) {
 	EEDetId eeId(seedId);
 	var_eleSeedIeta=eeId.ix();
         var_eleSeedIphi=eeId.iy();
-        var_eleSeedRawID=eeId.rawId();
+        //var_eleSeedRawID=eeId.rawId();
 
       }
 
@@ -767,10 +798,10 @@ HoEAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	  perEle_hcalRechitIeta.push_back(hcalrh.id().ieta());
 	  perEle_hcalRechitIphi.push_back(hcalrh.id().iphi());
 	  perEle_hcalRechitEnergy.push_back(hcalrh.energy());
-	  perEle_hcalRechitAbsDIetaFromEleSeed.push_back(dIEtaAbs);
-	  perEle_hcalRechitAbsDIphiFromEleSeed.push_back(dIPhiAbs);
+	  // perEle_hcalRechitAbsDIetaFromEleSeed.push_back(dIEtaAbs);
+	  // perEle_hcalRechitAbsDIphiFromEleSeed.push_back(dIPhiAbs);
 	 
-	  perEle_hcalRechitRawID.push_back(hcalrh.id().rawId());
+	  //	  perEle_hcalRechitRawID.push_back(hcalrh.id().rawId());
 	  perEle_hcalRechitDepth.push_back(hcalrh.id().depth());
 
 	  float rechitEta=-99;
@@ -813,12 +844,13 @@ HoEAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       
     }
   
-    ele_trackFbrem.push_back(ele.trackFbrem());
-    ele_superClusterFbrem.push_back(ele.superClusterFbrem());
-    ele_numberOfBrems.push_back(ele.numberOfBrems());
+    //    ele_trackFbrem.push_back(ele.trackFbrem());
+    // ele_superClusterFbrem.push_back(ele.superClusterFbrem());
+    // ele_numberOfBrems.push_back(ele.numberOfBrems());
     
     //    std::cout << "track_fbrem=" << ele.trackFbrem() << " sc_fbrem=" << ele.superClusterFbrem() << " nBrem="  <<  ele.numberOfBrems()  << std::endl;
     // std::cout << "classification " << ele.classificationVariables().ClassificationVariables << std::endl;
+    /*
     int var_golden=0;
     int var_unknown=0;
     int var_gap=0;
@@ -855,13 +887,14 @@ HoEAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       // std::cout << "GAP ele!!!" << std::endl;
       var_gap=1;
     }
+    */
 
-    ele_golden.push_back(var_golden);
-    ele_unknown.push_back(var_unknown);
-    ele_gap.push_back(var_gap);
-    ele_badtrack.push_back(var_badtrack);
-    ele_showering.push_back(var_showering);
-    ele_bigbrem.push_back(var_bigbrem);
+    //    ele_golden.push_back(var_golden);
+    // ele_unknown.push_back(var_unknown);
+    // ele_gap.push_back(var_gap);
+    //  ele_badtrack.push_back(var_badtrack);
+    // ele_showering.push_back(var_showering);
+    //  ele_bigbrem.push_back(var_bigbrem);
     scEn.push_back(superClus.energy());
     eleSCRawEn.push_back(superClus.rawEnergy());
     seedEn.push_back(seedCluster.energy());
@@ -872,15 +905,15 @@ HoEAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     cmssw_eleHoE_full5x5.push_back(ele.full5x5_hcalOverEcal());
     eleSeedIeta.push_back(var_eleSeedIeta);
     eleSeedIphi.push_back(var_eleSeedIphi);
-    eleSeedRawID.push_back(var_eleSeedRawID);
+    // eleSeedRawID.push_back(var_eleSeedRawID);
     seedHcalIeta.push_back(var_seedHcalIeta);
     seedHcalIphi.push_back(var_seedHcalIphi);
     hcalRechitIeta.push_back(perEle_hcalRechitIeta);
     hcalRechitIphi.push_back(perEle_hcalRechitIphi);
     hcalRechitEnergy.push_back(perEle_hcalRechitEnergy);
-    hcalRechitAbsDIetaFromEleSeed.push_back(perEle_hcalRechitAbsDIetaFromEleSeed);
-    hcalRechitAbsDIphiFromEleSeed.push_back(perEle_hcalRechitAbsDIphiFromEleSeed);
-    hcalRechitRawID.push_back(perEle_hcalRechitRawID);
+    //    hcalRechitAbsDIetaFromEleSeed.push_back(perEle_hcalRechitAbsDIetaFromEleSeed);
+    //  hcalRechitAbsDIphiFromEleSeed.push_back(perEle_hcalRechitAbsDIphiFromEleSeed);
+    //  hcalRechitRawID.push_back(perEle_hcalRechitRawID);
     hcalRechitDepth.push_back(perEle_hcalRechitDepth);
     hcalRechitEta.push_back(perEle_hcalRechitEta);
     hcalRechitPhi.push_back(perEle_hcalRechitPhi);
