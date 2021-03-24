@@ -8,14 +8,14 @@ config.JobType.pluginName = 'Analysis'
 config.JobType.psetName = '../python/ConfFile_cfg.py'
 
 config.Data.inputDataset = ''
-config.Data.inputDBS = 'global'
-#config.Data.inputDBS = 'phys03'
+#config.Data.inputDBS = 'global'
+config.Data.inputDBS = 'phys03'
 config.Data.splitting = 'FileBased'
-config.Data.unitsPerJob = 12
+config.Data.unitsPerJob = 10
 
-config.Data.outLFNDirBase = '/store/group/phys_egamma/swmukher/HoE_April_2020/' #% (getUsernameFromSiteDB())
+config.Data.outLFNDirBase = '/store/group/phys_egamma/swmukher/GapObj_March_2021/' #% (getUsernameFromSiteDB())
 config.Data.publication = False
-config.Data.outputDatasetTag = 'Sample2021'
+config.Data.outputDatasetTag = 'Run3_PU0'
 config.Site.storageSite = 'T2_CH_CERN'
 config.Site.ignoreGlobalBlacklist = True
 
@@ -113,16 +113,32 @@ if __name__ == '__main__':
 #    config.Data.inputDataset = '/DoubleEle-FlatPt2To250-PU0_13TeV-110X_mcRun3_2021_realistic_v6/afiqaize-MINIAODSIM-28ea11753f803e89e7fd3e375196acc9/USER'
 #    submit(config)     
 
-    config.General.requestName = 'ttbar'
-    config.Data.inputDataset = '/TTbar_14TeV_TuneCP5_Pythia8/Run3Winter20DRMiniAOD-FlatPU0to80ALCARECO_110X_mcRun3_2021_realistic_v6-v2/MINIAODSIM'
+#    config.General.requestName = 'ttbar'
+#    config.Data.inputDataset = '/TTbar_14TeV_TuneCP5_Pythia8/Run3Winter20DRMiniAOD-FlatPU0to80ALCARECO_110X_mcRun3_2021_realistic_v6-v2/MINIAODSIM'
+#    submit(config)     
+
+#    config.General.requestName = 'qcd'
+#    config.Data.inputDataset = '/QCD_Pt-15to3000_TuneCP5_Flat_14TeV_pythia8/Run3Winter20DRMiniAOD-DRFlatPU30to80_110X_mcRun3_2021_realistic_v6-v2/MINIAODSIM'
+#    submit(config)     
+
+#    config.General.requestName = 'PhotonFlatPt0To200'
+#    config.Data.inputDataset = '/PhotonFlatPt0To200/Run3Winter20DRMiniAOD-NoPU_110X_mcRun3_2021_realistic_v6-v3/MINIAODSIM'
+#    submit(config)     
+
+#    config.General.requestName = 'PhotonFlatPt200To500'
+#    config.Data.inputDataset = '/PhotonFlatPt200To500/Run3Winter20DRMiniAOD-NoPU_110X_mcRun3_2021_realistic_v6-v3/MINIAODSIM'
+#    submit(config)     
+
+    config.General.requestName = 'DoubleEleFlatPt2To250_1'
+    config.Data.inputDataset = '/DoubleEle-FlatPt2To250-PU0_13TeV-110X_mcRun3_2021_realistic_v6/afiqaize-AODSIM-496d50a5813dbc10d5eadfa8d6b85ae0/USER'
     submit(config)     
 
-    config.General.requestName = 'qcd'
-    config.Data.inputDataset = '/QCD_Pt-15to3000_TuneCP5_Flat_14TeV_pythia8/Run3Winter20DRMiniAOD-DRFlatPU30to80_110X_mcRun3_2021_realistic_v6-v2/MINIAODSIM'
+    config.General.requestName = 'DoubleEleFlatPt2To250_2'
+    config.Data.inputDataset = '/DoubleEle-FlatPt2To250-PU0_13TeV-110X_mcRun3_2021_realistic_v6/afiqaize-GEN-SIM-RAW-168ba96e4ca816c115450db332534529/USER'
     submit(config)     
 
-    config.General.requestName = 'dytoll'
-    config.Data.inputDataset = '/DYToLL_M-50_TuneCP5_14TeV-pythia8/Run3Winter20DRMiniAOD-DRFlatPU30to80_110X_mcRun3_2021_realistic_v6-v2/MINIAODSIM'
+    config.General.requestName = 'DoubleEleFlatPt2To250_3'
+    config.Data.inputDataset = '/DoubleEle-FlatPt2To250-PU0_13TeV-110X_mcRun3_2021_realistic_v6/afiqaize-MINIAODSIM-28ea11753f803e89e7fd3e375196acc9/USER'
     submit(config)     
 
 
