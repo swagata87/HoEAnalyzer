@@ -90,8 +90,8 @@ public:
   edm::Service<TFileService> fs;
   TTree   *tree = fs->make<TTree>("EventTree", "EventData");
   //
+  std::vector<int>  ele_cutbased_tight;
   //geometry & gap info
-
   std::vector<int>  ele_isEB; // true if particle is in ECAL Barrel
   std::vector<int>  ele_isEE; // true if particle is in ECAL Endcaps
   std::vector<int>  ele_isGap_cmssw; 
@@ -143,7 +143,7 @@ public:
   std::vector<int> event_number;
   //
 
-  std::vector<float> rho;
+  //  std::vector<float> rho;
 
   
 private:
@@ -158,7 +158,7 @@ private:
   int maxDIPhi_=5;
 
   // ----------member data ---------------------------
-  edm::EDGetTokenT<double> rhoLabel_;
+  //  edm::EDGetTokenT<double> rhoLabel_;
   //  edm::EDGetTokenT<edm::View<reco::GsfElectron> > eleToken_;
   edm::EDGetTokenT<edm::View<pat::Electron> > eleToken_;
   edm::EDGetTokenT<edm::View<pat::Photon> > phoToken_;
@@ -187,7 +187,7 @@ private:
 //
 HoEAnalyzer::HoEAnalyzer(const edm::ParameterSet& iConfig)
   :
-  rhoLabel_(consumes<double>(iConfig.getParameter<edm::InputTag>("rhoLabel"))),
+  // rhoLabel_(consumes<double>(iConfig.getParameter<edm::InputTag>("rhoLabel"))),
   eleToken_(consumes<edm::View<pat::Electron> >(iConfig.getParameter<edm::InputTag>("electrons"))),
   phoToken_(consumes<edm::View<pat::Photon> >(iConfig.getParameter<edm::InputTag>("photons"))),
   //  eleToken_(consumes<edm::View<reco::GsfElectron> >(iConfig.getParameter<edm::InputTag>("electrons"))),
@@ -202,6 +202,7 @@ HoEAnalyzer::HoEAnalyzer(const edm::ParameterSet& iConfig)
 {
   //now do what ever initialization is needed
 
+  tree->Branch("ele_cutbased_tight_",&ele_cutbased_tight);
   // geometry, gaps etc info
   tree->Branch("ele_isEB_",&ele_isEB);
   tree->Branch("ele_isEE_",&ele_isEE);
@@ -246,7 +247,7 @@ HoEAnalyzer::HoEAnalyzer(const edm::ParameterSet& iConfig)
   tree->Branch("phoSeedIphi_",&phoSeedIphi);
 
   tree->Branch("puTrue_", &puTrue);
-  tree->Branch("rho_", &rho);
+  //  tree->Branch("rho_", &rho);
   tree->Branch("run_number_", &run_number);
   tree->Branch("lumi_number_", &lumi_number);
   tree->Branch("event_number_", &event_number);
@@ -273,7 +274,10 @@ HoEAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
   ///  std::cout << " \n ****** new event ... " << std::endl; 
   using namespace edm;
+
+  const int kModuleBoundaries[4] = {25, 45, 65, 85};
   
+  ele_cutbased_tight.clear();
   ele_isEB.clear();
   ele_isEE.clear();
   ele_isGap_cmssw.clear();
@@ -316,7 +320,7 @@ HoEAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   phoSeedIeta.clear();
   phoSeedIphi.clear();
 
-  rho.clear();
+  //  rho.clear();
   puTrue.clear();
   run_number.clear();
   lumi_number.clear(); 
@@ -327,9 +331,9 @@ HoEAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
   //  std::cout << "run/lumi/event " << run_number << "/" << lumi_number << "/" << event_number << std::endl;
 
-  edm::Handle<double> rhoHandle;
-  iEvent.getByToken(rhoLabel_, rhoHandle);
-  rho.push_back(*(rhoHandle.product()));
+  //  edm::Handle<double> rhoHandle;
+  //  iEvent.getByToken(rhoLabel_, rhoHandle);
+  // rho.push_back(*(rhoHandle.product()));
 
   edm::Handle<std::vector<PileupSummaryInfo> > genPileupHandle;
   iEvent.getByToken(puCollection_, genPileupHandle);
@@ -353,7 +357,6 @@ HoEAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   for(const auto& ele : iEvent.get(eleToken_) ) {
     //    std::cout << "\n new electron ...\n" ;
 
-
     int genmatched=0;
     double min_dr=9999.9;
     double ptR=9999.9;
@@ -361,26 +364,26 @@ HoEAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     double this_eleGenEta=-99;
     double this_eleGenPhi=-99;
     //double this_eleGenE=-99;
-   
-    if (genParticlesHandle.isValid()) {
-      //std::cout << "starting gen particle loop \n " ;
-      for (std::vector<reco::GenParticle>::const_iterator ip = genParticlesHandle->begin(); ip != genParticlesHandle->end(); ++ip) {
-	const reco::Candidate *p = (const reco::Candidate*)&(*ip);
-	if ( (p->status()==1) &&  ((abs(p->pdgId())) == 11)  ) {
-	  double this_dr=reco::deltaR(ele,*p);
-	  if (this_dr<min_dr) {
-	    min_dr=this_dr;
-	    ptR=ele.pt()/p->pt();
-	    this_eleGenPt=p->pt();
-	    this_eleGenEta=p->eta();
-	    this_eleGenPhi=p->phi();
-	    //this_eleGenE=p->energy();
-	  }
-	}  
-      }
 
-    }
-  
+    if ( ! iEvent.isRealData()) {
+      if (genParticlesHandle.isValid()) {
+	//std::cout << "starting gen particle loop \n " ;
+	for (std::vector<reco::GenParticle>::const_iterator ip = genParticlesHandle->begin(); ip != genParticlesHandle->end(); ++ip) {
+	  const reco::Candidate *p = (const reco::Candidate*)&(*ip);
+	  if ( (p->status()==1) &&  ((abs(p->pdgId())) == 11)  ) {
+	    double this_dr=reco::deltaR(ele,*p);
+	    if (this_dr<min_dr) {
+	      min_dr=this_dr;
+	      ptR=ele.pt()/p->pt();
+	      this_eleGenPt=p->pt();
+	      this_eleGenEta=p->eta();
+	      this_eleGenPhi=p->phi();
+	      //this_eleGenE=p->energy();
+	    }
+	  }  
+	}
+      }
+    }  
     if ( (min_dr<0.04) && (ptR>0.7) && (ptR<1.3) )  genmatched=1; // these cuts were decided looking at min_dr and ptR distributions.
     dR_recoEle_genEle.push_back(min_dr);
     ptRecoEle_by_ptGenEle.push_back(ptR);
@@ -396,6 +399,7 @@ HoEAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     elePhi.push_back(ele.phi());
     eleSigmaIEtaIEtaFull5x5.push_back(ele.full5x5_sigmaIetaIeta());
   
+    ele_cutbased_tight.push_back(ele.electronID("cutBasedElectronID-Fall17-94X-V2-tight"));
     //gap, geometry etc
     ele_isEB.push_back(ele.isEB()) ;
     ele_isEE.push_back(ele.isEE()) ;
@@ -415,6 +419,14 @@ HoEAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     if ( seedCluster.seed().subdetId()==EcalBarrel ) {                                                                                                       
       EBDetId ebdetid(seedCluster.seed()); 
       int thisIEtaUnit=ebdetid.ietaAbs();
+     
+      //      std::cout << "ieta = " << thisIEtaUnit << std::endl;
+      // std::cout << "kModuleBoundaries " << kModuleBoundaries << std::endl;
+      // std::cout << "kModuleBoundaries+4 " << kModuleBoundaries+4 << std::endl;
+      // std::cout << "std::find " << std::find(kModuleBoundaries, kModuleBoundaries + 4, thisIEtaUnit) << std::endl;
+      // bool a =  thisIEtaUnit == 1 || (kModuleBoundaries + 4) != std::find(kModuleBoundaries, kModuleBoundaries + 4, thisIEtaUnit);
+      // std::cout << "result " << a << std::endl;
+
       if ( std::any_of(barrelGapIEta.begin(), barrelGapIEta.end(), [thisIEtaUnit](int gapUnit){return thisIEtaUnit==gapUnit;}) == true) {
 	isGapcustom = 1;
       }
@@ -434,6 +446,9 @@ HoEAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       }
     } 
     ele_isGap_custom_with4060.push_back(isGapcustom);
+
+    //test
+    //    return ieta == 1 || (kModuleBoundaries + 4) != std::find(kModuleBoundaries, kModuleBoundaries + 4, ieta);
 
     int var_eleSeedIeta=-999;
     int var_eleSeedIphi=-999;
@@ -474,24 +489,26 @@ HoEAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     double this_phoGenEta=-99;
     double this_phoGenPhi=-99;
      
-    if (genParticlesHandle.isValid()) {
-      //std::cout << "starting gen particle loop \n " ;
-      for (std::vector<reco::GenParticle>::const_iterator ip = genParticlesHandle->begin(); ip != genParticlesHandle->end(); ++ip) {
-	const reco::Candidate *p = (const reco::Candidate*)&(*ip);
-	if ( (p->status()==1) &&  ((abs(p->pdgId())) == 22)  ) {
-	  double this_dr=reco::deltaR(pho,*p);
-	  if (this_dr<min_dr) {
-	    min_dr=this_dr;
-	    ptR=pho.pt()/p->pt();
-	    this_phoGenPt=p->pt();
-	    this_phoGenEta=p->eta();
-	    this_phoGenPhi=p->phi();
-	    //this_phoGenE=p->energy();
-	  }
-	}  
+    if ( ! iEvent.isRealData()) {
+      if (genParticlesHandle.isValid()) {
+	//std::cout << "starting gen particle loop \n " ;
+	for (std::vector<reco::GenParticle>::const_iterator ip = genParticlesHandle->begin(); ip != genParticlesHandle->end(); ++ip) {
+	  const reco::Candidate *p = (const reco::Candidate*)&(*ip);
+	  if ( (p->status()==1) &&  ((abs(p->pdgId())) == 22)  ) {
+	    double this_dr=reco::deltaR(pho,*p);
+	    if (this_dr<min_dr) {
+	      min_dr=this_dr;
+	      ptR=pho.pt()/p->pt();
+	      this_phoGenPt=p->pt();
+	      this_phoGenEta=p->eta();
+	      this_phoGenPhi=p->phi();
+	      //this_phoGenE=p->energy();
+	    }
+	  }  
+	}
       }
-    }
-  
+    }  
+
     if ( (min_dr<0.04) && (ptR>0.7) && (ptR<1.3) )  genmatched=1; // these cuts were decided looking at min_dr and ptR distributions.
     dR_recoPho_genPho.push_back(min_dr);
     ptRecoPho_by_ptGenPho.push_back(ptR);
